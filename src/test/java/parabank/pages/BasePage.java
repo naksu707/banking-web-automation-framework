@@ -34,6 +34,12 @@ public abstract class BasePage {
         return new OpenAccountPage(page);
     }
 
+    @Step("Go to \"Transfer Funds\"")
+    public TransferFundsPage goToTransferFunds() {
+        page.locator("#leftPanel a[href*='transfer.htm']").click();
+        return new TransferFundsPage(page);
+    }
+
     @Step("Go to \"Accounts Overview\"")
     public AccountsOverviewPage goToAccountsOverview() {
         page.locator("#leftPanel a[href*='overview.htm']").click();

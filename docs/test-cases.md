@@ -59,3 +59,30 @@ Traceability between the test cases and their automated tests.
 | ID | Test case | Priority | Type | Automated test |
 |---|---|---|---|---|
 | TC-INT-02 | An account opened in the UI exists in the API with the right owner, type and funding | Critical | Integration | `OpenAccountAcrossLayersTest.accountOpenedInUiIsStoredCorrectly` |
+
+## Transfers · UI
+
+| ID | Test case | Priority | Type | Automated test |
+|---|---|---|---|---|
+| TC-TRF-01 | A transfer between own accounts shows "Transfer Complete!" with the amount and both account numbers | Critical | Smoke, positive | `TransferFundsTest.transferShowsConfirmation` |
+| TC-TRF-02 | An empty amount is rejected and no money moves | Critical | Negative | `TransferFundsTest.invalidAmountIsRejected` ("") |
+| TC-TRF-03 | A negative amount is rejected and no money moves | Critical | Negative | `TransferFundsTest.negativeOrZeroAmountIsRejected` ("-50") · ❌ fails: [BUG-004](defects.md#bug-004--transfers-accept-a-negative-amount-which-moves-money-out-of-the-destination-account) |
+| TC-TRF-04 | A zero amount is rejected and no money moves | High | Negative | `TransferFundsTest.negativeOrZeroAmountIsRejected` ("0") · ❌ fails: [BUG-006](defects.md#bug-006--transfers-accept-an-amount-of-zero) |
+| TC-TRF-05 | A non-numeric amount is rejected and no money moves | High | Negative | `TransferFundsTest.invalidAmountIsRejected` ("abc") |
+
+## Transfers · API
+
+| ID | Test case | Priority | Type | Automated test |
+|---|---|---|---|---|
+| TC-API-TRF-01 | `POST /transfer` between own accounts returns 200 and a confirmation | Critical | Smoke, positive | `TransferApiTest.transferSucceeds` |
+| TC-API-TRF-02 | A transfer moves exactly the amount: source − amount, destination + amount | Critical | Positive, money integrity | `TransferApiTest.transferMovesExactAmount` |
+| TC-API-TRF-03 | A negative amount returns 400 and no money moves | Critical | Negative | `TransferApiTest.negativeAmountIsRejected` · ❌ fails: [BUG-004](defects.md#bug-004--transfers-accept-a-negative-amount-which-moves-money-out-of-the-destination-account) |
+| TC-API-TRF-04 | A zero amount returns 400 and no money moves | High | Negative | `TransferApiTest.zeroAmountIsRejected` · ❌ fails: [BUG-006](defects.md#bug-006--transfers-accept-an-amount-of-zero) |
+| TC-API-TRF-05 | An amount greater than the source balance returns 400 and no money moves | Critical | Negative | `TransferApiTest.amountAboveBalanceIsRejected` · ❌ fails: [BUG-005](defects.md#bug-005--transfers-do-not-check-the-available-balance-and-leave-the-account-overdrawn) |
+| TC-API-TRF-06 | A transfer to the same account returns 400 | Medium | Negative | `TransferApiTest.sameAccountTransferIsRejected` · ❌ fails: [BUG-007](defects.md#bug-007--a-transfer-to-the-same-account-is-accepted) |
+
+## Integration · Transfers
+
+| ID | Test case | Priority | Type | Automated test |
+|---|---|---|---|---|
+| TC-INT-03 | A transfer made in the UI moves exactly the amount between the two accounts in the back end | Critical | Integration, money integrity | `TransferAcrossLayersTest.uiTransferUpdatesBothBalances` |

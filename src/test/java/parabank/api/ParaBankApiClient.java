@@ -54,6 +54,14 @@ public class ParaBankApiClient {
                 .setQueryParam("fromAccountId", String.valueOf(fromAccountId))));
     }
 
+    @Step("API: transfer {amount} from account {fromAccountId} to account {toAccountId}")
+    public APIResponse transfer(long fromAccountId, long toAccountId, String amount) {
+        return attach("POST transfer", request.post(BASE + "transfer", RequestOptions.create()
+                .setQueryParam("fromAccountId", String.valueOf(fromAccountId))
+                .setQueryParam("toAccountId", String.valueOf(toAccountId))
+                .setQueryParam("amount", amount)));
+    }
+
     /** Logs in and returns the customer, failing fast if the credentials are rejected. */
     public CustomerDto loginAndGetCustomer(String username, String password) {
         APIResponse response = login(username, password);
@@ -77,6 +85,10 @@ public class ParaBankApiClient {
     /** Opens an account through the API, failing fast if ParaBank rejects it. */
     public AccountDto openAccount(long customerId, AccountType type, long fromAccountId) {
         return parse(expectOk(createAccount(customerId, type, fromAccountId)), AccountDto.class);
+    }
+
+    public java.math.BigDecimal balanceOf(long accountId) {
+        return account(accountId).balance;
     }
 
     public static <T> T parse(APIResponse response, Class<T> type) {

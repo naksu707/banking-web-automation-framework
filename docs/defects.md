@@ -128,3 +128,124 @@ The browser is redirected to `overview.htm` and a session is opened for a differ
 - The REST API rejects the same credentials correctly with HTTP 400 (`AuthApiTest.invalidLoginIsRejected`): the defect is in the web login only.
 - Empty credentials are still rejected correctly (`LoginTest.emptyCredentialsAreRejected`).
 - The evidence screenshot is saved automatically by `EvidenceExtension` when the test fails.
+
+---
+
+## BUG-004 · Transfers accept a negative amount, which moves money out of the destination account
+
+| Field | Value |
+|---|---|
+| **Status** | Open |
+| **Severity** | Critical: a customer can pull money out of any account they can name as the destination |
+| **Priority** | Highest |
+| **Area** | Transfers · REST API (`POST /services/bank/transfer`) and UI (Transfer Funds) |
+| **Environment** | https://parabank.parasoft.com/parabank/ · API and Chromium · found 2026-11-25 |
+| **Automated tests** | `TransferApiTest.negativeAmountIsRejected`, `TransferFundsTest.negativeOrZeroAmountIsRejected` ("-50") (tag `known-defect`) |
+| **Related test cases** | TC-API-TRF-03, TC-TRF-03 |
+
+**Steps to reproduce**
+
+1. Log in and note the balances of two accounts, A (source) and B (destination).
+2. Send `POST /services/bank/transfer?fromAccountId={A}&toAccountId={B}&amount=-40.00` (or enter `-50` in *Transfer Funds*).
+
+**Expected result**
+
+The transfer is rejected (HTTP 400 / validation message) and both balances stay the same.
+
+**Actual result**
+
+The API answers `200 Successfully transferred $-40.00 from account #A to account #B`. Account A goes **up** from 415.50 to 455.50 and account B goes **down** from 100.00 to 60.00. The UI shows *"Transfer Complete!"*.
+
+**Impact**
+
+- The transfer runs in reverse: the "source" customer takes money from the "destination" account without its owner's consent.
+- Combined with an account number of another customer, this becomes a way to steal funds.
+
+---
+
+## BUG-005 · Transfers do not check the available balance and leave the account overdrawn
+
+| Field | Value |
+|---|---|
+| **Status** | Open |
+| **Severity** | Critical: money can be transferred that the customer does not have |
+| **Priority** | Highest |
+| **Area** | Transfers · REST API (`POST /services/bank/transfer`) |
+| **Environment** | https://parabank.parasoft.com/parabank/ · API · found 2026-11-25 |
+| **Automated test** | `TransferApiTest.amountAboveBalanceIsRejected` (tag `known-defect`) |
+| **Related test cases** | TC-API-TRF-05 |
+
+**Steps to reproduce**
+
+1. Log in and note the balance of account A (for example, 355.50).
+2. Send `POST /services/bank/transfer?fromAccountId={A}&toAccountId={B}&amount=1355.50` (balance + 1,000).
+
+**Expected result**
+
+The transfer is rejected for insufficient funds and both balances stay the same.
+
+**Actual result**
+
+The API answers `200 Successfully transferred $1355.50`. Account A ends at **-1,000.00** and account B receives the full amount.
+
+**Impact**
+
+- Unlimited overdraft: customers can move money they do not have to other accounts.
+- Breaks the basic rule of any account without an approved credit line.
+
+---
+
+## BUG-006 · Transfers accept an amount of zero
+
+| Field | Value |
+|---|---|
+| **Status** | Open |
+| **Severity** | Medium: no money moves, but an empty transaction is confirmed and recorded |
+| **Priority** | Medium |
+| **Area** | Transfers · UI (Transfer Funds) and REST API |
+| **Environment** | https://parabank.parasoft.com/parabank/ · Chromium · found 2026-11-25 |
+| **Automated tests** | `TransferFundsTest.negativeOrZeroAmountIsRejected` ("0"), `TransferApiTest.zeroAmountIsRejected` (tag `known-defect`) |
+| **Related test cases** | TC-TRF-04, TC-API-TRF-04 |
+
+**Steps to reproduce**
+
+1. Log in and open *Transfer Funds*.
+2. Enter `0` as the amount, choose two accounts and click **Transfer**.
+
+**Expected result**
+
+A validation message asks for an amount greater than zero.
+
+**Actual result**
+
+The page shows *"Transfer Complete!"* for $0.00.
+
+**Notes**
+
+- The API behavior for a zero amount was not observed yet: the run was rate limited (HTTP 429) before that test. It is expected to match the UI, since the UI calls the same service.
+
+---
+
+## BUG-007 · A transfer to the same account is accepted
+
+| Field | Value |
+|---|---|
+| **Status** | Open |
+| **Severity** | Low: no money moves, but a meaningless transaction is confirmed and recorded |
+| **Priority** | Low |
+| **Area** | Transfers · REST API (`POST /services/bank/transfer`) |
+| **Environment** | https://parabank.parasoft.com/parabank/ · API · found 2026-11-25 |
+| **Automated test** | `TransferApiTest.sameAccountTransferIsRejected` (tag `known-defect`) |
+| **Related test cases** | TC-API-TRF-06 |
+
+**Steps to reproduce**
+
+1. Send `POST /services/bank/transfer?fromAccountId={A}&toAccountId={A}&amount=40.00`.
+
+**Expected result**
+
+The transfer is rejected because the source and destination are the same account.
+
+**Actual result**
+
+The API answers `200 Successfully transferred $40.00 from account #A to account #A`.
