@@ -25,6 +25,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
+    # CI runs against its own ParaBank (official Docker image) instead of the shared public demo,
+    # which rate-limits automated traffic (Cloudflare HTTP 429) and changes state between runs.
+    services:
+      parabank:
+        image: parasoft/parabank:latest
+        ports:
+          - 8080:8080
+
+    env:
+      BASE_URL: http://localhost:8080/parabank/
+
     steps:
       - name: Check out the code
         uses: actions/checkout@v5
@@ -39,6 +50,18 @@ jobs:
       - name: Install Playwright browser
         # Playwright is a test-scoped dependency, so exec:java needs the test classpath
         run: mvn -B -q test-compile exec:java -e -Dexec.classpathScope=test -Dexec.mainClass=com.microsoft.playwright.CLI -Dexec.args="install --with-deps chromium"
+
+      - name: Wait for ParaBank to start
+        run: |
+          for i in $(seq 1 60); do
+            if curl -fs -o /dev/null "${BASE_URL}index.htm"; then echo "ParaBank is up"; exit 0; fi
+            sleep 5
+          done
+          echo "::error::ParaBank did not start within 5 minutes"; exit 1
+
+      - name: Initialize the ParaBank database
+        # Same as the "Initialize" button on ParaBank's admin page: loads the demo data
+        run: curl -fs -o /dev/null -X POST "${BASE_URL}services/bank/initializeDB" || echo "::warning::Could not initialize the database"
 
       - name: Run tests
         env:

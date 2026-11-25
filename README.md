@@ -179,13 +179,13 @@ GitHub Actions runs the suite on every push and pull request to `main`, and can 
 
 - ParaBank is a shared public demo: it can be slow, return temporary errors, or reset its database. A failure caused by the site being unavailable is not a defect in the tests.
 - ParaBank's API has no registration endpoint, so test customers are always registered through the UI.
+- **CI uses its own ParaBank:** GitHub Actions starts the official `parasoft/parabank` Docker image and runs the suite against `http://localhost:8080/parabank/`, so the pipeline does not depend on the public demo being available. Locally the tests use the public site by default; to use a local copy run `docker run -d -p 8080:8080 parasoft/parabank` and `mvn test -DbaseUrl=http://localhost:8080/parabank/`. Defects found on the public site (BUG-001, BUG-003) may not reproduce on a fresh local instance.
 - **Rate limiting:** ParaBank sits behind Cloudflare, which blocks an IP that sends too many requests in a short time (HTTP 429, *"Error 1015: You are being rate limited"*). While blocked, pages do not load and UI tests time out waiting for elements. Running the full suite many times in a row triggers it. Wait 15–30 minutes, and during development run only the class you are working on (`mvn test -Dtest=LoginTest`). The API client reports a 429 with a clear message, and test customer registration retries up to 3 times before failing with *"ParaBank may be unavailable"*.
 
 ---
 
 <div align="center">
 
-Made by 💜 **[Maria Jose Ospina](https://github.com/naksu707)** 💜
+Made with 💜 by **[María José Ospina Samboni](https://github.com/naksu707)**
 
 </div>
-
