@@ -1,0 +1,12 @@
+# Build output, reports and traces
+target/
+allure-results/
+allure-report/
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+
+# macOS
+.DS_Store

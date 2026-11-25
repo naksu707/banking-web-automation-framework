@@ -26,7 +26,7 @@ A test automation framework for **[ParaBank](https://parabank.parasoft.com/parab
 
 - **Maintainable:** Page Object Model for the UI and a dedicated client for the API.
 - **Independent tests:** every run registers its own customers, so tests never depend on shared demo accounts that other people can change.
-- **Easy to debug:** failed UI tests attach a screenshot and a Playwright trace to the report.
+- **Easy to debug:** failed UI tests save a screenshot and a Playwright trace, and every run writes a log.
 - **One tool for both layers:** Playwright drives the browser and also sends the API requests.
 
 ---
@@ -45,6 +45,14 @@ A test automation framework for **[ParaBank](https://parabank.parasoft.com/parab
 
 Detailed test cases and their traceability: **[docs/test-cases.md](docs/test-cases.md)**.
 
+### 🐞 Defects found
+
+| ID | Defect | Severity | Status |
+|---|---|---|---|
+| [BUG-001](docs/defects.md#bug-001--wrong-credentials-show-an-internal-server-error-instead-of-a-login-error) | Wrong credentials show *"An internal error has occurred"* instead of a login error | Medium | Open |
+
+Tests that expose an open defect are tagged `known-defect` and skipped by default, so the pipeline stays green while the defect stays documented.
+
 ### Risk-based priorities
 
 | Priority | Features |
@@ -62,7 +70,8 @@ Detailed test cases and their traceability: **[docs/test-cases.md](docs/test-cas
 | UI and API automation | Playwright for Java (`Page`, `Locator`, `APIRequestContext`) |
 | Test runner | JUnit 5 (tags, parameterized tests) |
 | Build | Maven |
-| Reporting | Allure (steps, screenshots, traces, API responses) |
+| Reporting | Allure (steps, screenshots, API responses) and Playwright traces |
+| Logging | Log4j2 (console and `target/logs/tests.log`) |
 | CI/CD | GitHub Actions |
 
 ---
@@ -70,21 +79,23 @@ Detailed test cases and their traceability: **[docs/test-cases.md](docs/test-cas
 ## 🏗️ Architecture
 
 ```text
-src
-├── main/java/io/github/naksu707/parabank
-│   ├── config/      Config: settings from config.properties, env vars or -D flags
-│   ├── pages/       Page Objects: HomePage, RegisterPage, AccountsOverviewPage
-│   ├── api/         ParaBankApiClient and response models (DTOs)
-│   └── data/        Customer model and TestDataFactory (unique test data)
-└── test/java/io/github/naksu707/parabank
-    ├── base/        BaseUiTest, BaseApiTest: browser and API lifecycle, failure artifacts
-    ├── support/     PlaywrightFactory, TestUsers (registers fresh customers)
-    ├── ui/auth/     LoginTest, LogoutTest, RegistrationTest
-    ├── api/         AuthApiTest
-    └── integration/ AccountsAcrossLayersTest (UI vs. API)
+src/test
+├── java/parabank
+│   ├── api/            ParaBankApiClient and response models (CustomerDto, AccountDto)
+│   ├── data/           Customer, TestDataFactory (unique data), TestUsers (registers fresh customers)
+│   ├── listeners/      EvidenceExtension (screenshot on failure), GlobalEvidenceCleaner
+│   ├── pages/          Page Objects: BasePage, HomePage, RegisterPage, AccountsOverviewPage
+│   ├── tests/
+│   │   ├── ui/         LoginTest, LogoutTest, RegistrationTest
+│   │   ├── api/        AuthApiTest
+│   │   └── integration/ AccountsAcrossLayersTest (UI vs. API)
+│   └── utils/          BaseTest, BaseApiTest, Config, CustomOptions, FileManager, Logs, PageProvider
+└── resources/
+    ├── config.properties
+    └── log4j2.xml
 ```
 
-**How a UI test runs:** one browser per test class, and a fresh browser context per test, so cookies and sessions never leak between tests.
+**How a test runs:** `@UsePlaywright(CustomOptions.class)` gives every test a fresh, isolated browser context and page (or API context), so cookies and sessions never leak between tests. `PageProvider` shares the page with the listeners, and `EvidenceExtension` captures a screenshot when a test fails.
 
 ---
 
@@ -99,6 +110,9 @@ mvn test
 # Only one group (tags: smoke, ui, api, integration)
 mvn test -Dgroups=smoke
 
+# Tests that expose known application defects (skipped by default)
+mvn test -Dgroups=known-defect -DexcludedGroups=
+
 # Watch the browser, slowed down
 mvn test -Dheadless=false -DslowMo=500
 
@@ -111,7 +125,7 @@ mvn test -Dtest=LoginTest
 
 ### Configuration
 
-Defaults are in `src/main/resources/config.properties`. Any value can be overridden with a `-D` flag or an environment variable:
+Defaults are in `src/test/resources/config.properties`. Any value can be overridden with a `-D` flag or an environment variable:
 
 | Key | Default | Env variable |
 |---|---|---|
@@ -129,12 +143,11 @@ Defaults are in `src/main/resources/config.properties`. Any value can be overrid
 mvn allure:serve
 ```
 
-Each test shows its steps, and failed UI tests include:
+Each test shows its steps and API calls attach their JSON responses. When a UI test fails:
 
-- a **full-page screenshot**;
-- a **Playwright trace**: open it at [trace.playwright.dev](https://trace.playwright.dev) to replay every action, network call and DOM snapshot.
-
-API calls attach their JSON responses.
+- a **full-page screenshot** is attached to the report and saved in `target/evidence`;
+- a **Playwright trace** is saved in `target/playwright`: open it at [trace.playwright.dev](https://trace.playwright.dev) to replay every action, network call and DOM snapshot;
+- the run log is in `target/logs/tests.log`.
 
 ---
 
