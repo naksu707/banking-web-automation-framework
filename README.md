@@ -180,6 +180,6 @@ GitHub Actions runs the suite on every push and pull request to `main`, and can 
 
 <div align="center">
 
-Made by 💜 **[María José Ospina Samboni](https://github.com/naksu707)** 💜
+Made by 💜 **[Maria Jose Ospina](https://github.com/naksu707)** 💜
 
 </div>
