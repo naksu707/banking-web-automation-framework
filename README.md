@@ -1,582 +1,172 @@
-# Banking Web Automation Framework
+<div align="center">
 
-Automated testing framework for **ParaBank**, a demo online banking application provided by Parasoft for software testing and automation practice.
+# 🏦 Banking Web Automation Framework
+### UI and REST API test automation for a banking application, with Playwright for Java
 
-This project focuses on **Web UI and API test automation**, applying professional QA practices to validate simulated banking workflows such as authentication, account management, fund transfers, bill payments, transactions, and loan requests.
+<p>
+<img src="https://img.shields.io/badge/Java-17-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white" /> <img src="https://img.shields.io/badge/Playwright-2EAD33?style=for-the-badge&logo=playwright&logoColor=white" /> <img src="https://img.shields.io/badge/JUnit%205-25A162?style=for-the-badge&logo=junit5&logoColor=white" /> <img src="https://img.shields.io/badge/Maven-C71A36?style=for-the-badge&logo=apachemaven&logoColor=white" />
+<br>
+<img src="https://img.shields.io/badge/Allure-FF6C37?style=for-the-badge" /> <img src="https://img.shields.io/badge/GitHub%20Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white" />
+</p>
 
-> **Important:** ParaBank is a simulated banking application created for testing and demonstration purposes. This project does not interact with real banking systems, financial accounts, or real transactions.
+</div>
 
----
-
-## Project Overview
-
-The purpose of this project is to design and implement a maintainable **Banking Test Automation Framework** using an existing banking simulator as the Application Under Test (AUT).
-
-The framework will automate both:
-
-* Web UI workflows using Selenium WebDriver.
-* REST API workflows using REST Assured.
-
-The project demonstrates how QA engineers can combine UI and API automation to validate the same business processes from different layers of an application.
+> [!NOTE]
+> **Status: in progress 🚧** · Phase 1 (framework core and authentication) is complete. Core banking workflows are next.
 
 ---
 
-## Objectives
+## 💡 About
 
-* Build a maintainable automation framework.
-* Automate critical banking workflows.
-* Implement UI automation with Selenium WebDriver.
-* Implement API automation with REST Assured.
-* Apply the Page Object Model.
-* Create reusable automation components.
-* Validate positive and negative scenarios.
-* Validate API responses and business rules.
-* Implement regression testing.
-* Generate automated test reports.
-* Integrate automated tests into CI/CD.
+A test automation framework for **[ParaBank](https://parabank.parasoft.com/parabank/)**, a demo online bank by Parasoft. It validates the same business flows through the **web UI** and the **REST API**, and checks that both layers agree.
 
----
+> ParaBank is a public demo application with simulated data. No real accounts or money are involved.
 
-## Application Under Test
+**Design goals**
 
-### ParaBank
-
-**Type:** Simulated Online Banking Application
-
-ParaBank provides a simulated banking environment where users can perform operations such as:
-
-* Registering users.
-* Logging in.
-* Managing accounts.
-* Viewing balances.
-* Transferring funds.
-* Paying bills.
-* Viewing transactions.
-* Requesting loans.
-
-The application also exposes REST services that can be used for API automation.
+- **Maintainable:** Page Object Model for the UI and a dedicated client for the API.
+- **Independent tests:** every run registers its own customers, so tests never depend on shared demo accounts that other people can change.
+- **Easy to debug:** failed UI tests attach a screenshot and a Playwright trace to the report.
+- **One tool for both layers:** Playwright drives the browser and also sends the API requests.
 
 ---
 
-## Testing Scope
+## 🧪 Test scope
 
-### Authentication
+| Area | UI | API | Status |
+|---|---|---|---|
+| Login, logout and registration (positive and negative) | ✅ | ✅ | Done |
+| Accounts overview (UI vs. API consistency) | ✅ | ✅ | Done |
+| Open new account | | | Planned |
+| Transfer funds | | | Planned |
+| Bill payment | | | Planned |
+| Transaction history | | | Planned |
+| Loan request | | | Planned |
 
-#### Positive Scenarios
+Detailed test cases and their traceability: **[docs/test-cases.md](docs/test-cases.md)**.
 
-* Login with valid credentials.
-* Successful logout.
-* Successful user registration.
+### Risk-based priorities
 
-#### Negative Scenarios
-
-* Invalid username.
-* Invalid password.
-* Empty username.
-* Empty password.
-* Invalid registration information.
-
----
-
-### Account Management
-
-* View account overview.
-* Validate account information.
-* Validate account balance.
-* Open a new account.
-* Validate successful account creation.
-* Retrieve account information through the API.
+| Priority | Features |
+|---|---|
+| **Critical** | Login, account access, transfers, bill payments, transaction validation |
+| **High** | Registration, opening accounts, loans, customer information |
 
 ---
 
-### Fund Transfers
+## 🛠️ Tech stack
 
-* Transfer funds between accounts.
-* Validate transfer amount.
-* Validate source account.
-* Validate destination account.
-* Validate successful transfer.
-* Validate invalid transfer scenarios.
-* Validate transfer through the API.
+| Purpose | Tool |
+|---|---|
+| Language | Java 17 |
+| UI and API automation | Playwright for Java (`Page`, `Locator`, `APIRequestContext`) |
+| Test runner | JUnit 5 (tags, parameterized tests) |
+| Build | Maven |
+| Reporting | Allure (steps, screenshots, traces, API responses) |
+| CI/CD | GitHub Actions |
 
-Example automated flow:
+---
+
+## 🏗️ Architecture
 
 ```text
-Login
-  ↓
-Account Overview
-  ↓
-Select Source Account
-  ↓
-Select Destination Account
-  ↓
-Enter Transfer Amount
-  ↓
-Submit Transfer
-  ↓
-Validate Transfer Result
+src
+├── main/java/io/github/naksu707/parabank
+│   ├── config/      Config: settings from config.properties, env vars or -D flags
+│   ├── pages/       Page Objects: HomePage, RegisterPage, AccountsOverviewPage
+│   ├── api/         ParaBankApiClient and response models (DTOs)
+│   └── data/        Customer model and TestDataFactory (unique test data)
+└── test/java/io/github/naksu707/parabank
+    ├── base/        BaseUiTest, BaseApiTest: browser and API lifecycle, failure artifacts
+    ├── support/     PlaywrightFactory, TestUsers (registers fresh customers)
+    ├── ui/auth/     LoginTest, LogoutTest, RegistrationTest
+    ├── api/         AuthApiTest
+    └── integration/ AccountsAcrossLayersTest (UI vs. API)
 ```
 
----
-
-### Bill Payment
-
-* Access bill payment functionality.
-* Enter payee information.
-* Enter payment information.
-* Submit payment.
-* Validate successful payment.
-* Validate required fields.
-* Validate invalid payment data.
+**How a UI test runs:** one browser per test class, and a fresh browser context per test, so cookies and sessions never leak between tests.
 
 ---
 
-### Transactions
+## ▶️ Run the tests
 
-* View transaction history.
-* Validate transaction details.
-* Search transactions.
-* Validate transaction amounts.
-* Validate transaction dates.
-* Retrieve transactions through the API.
-
----
-
-### Loan Requests
-
-* Access loan request functionality.
-* Enter loan information.
-* Submit loan request.
-* Validate loan response.
-* Validate approved scenarios.
-* Validate rejected scenarios.
-
----
-
-## API Automation
-
-The project will use **REST Assured** to validate ParaBank's available REST services.
-
-API testing will cover operations related to:
-
-* Authentication.
-* Customers.
-* Accounts.
-* Transactions.
-* Transfers.
-* Bill payments.
-* Loans.
-
-### API Validations
-
-Each API test may validate:
-
-* HTTP status code.
-* Response body.
-* Response structure.
-* Required fields.
-* Data types.
-* Business rules.
-* Error responses.
-* Response time.
-* Data consistency.
-
-Example:
-
-```text
-Test
- ↓
-REST Assured
- ↓
-HTTP Request
- ↓
-ParaBank REST API
- ↓
-HTTP Response
- ↓
-Assertions
- ↓
-Test Result
-```
-
----
-
-## UI Automation
-
-The web application will be automated using **Selenium WebDriver**.
-
-UI tests will validate:
-
-* Page navigation.
-* Form interactions.
-* Element visibility.
-* User input.
-* Business workflows.
-* Error messages.
-* Dynamic content.
-* User-facing results.
-
-The UI automation layer will use the **Page Object Model** to separate page interactions from test logic.
-
----
-
-## QA Strategy
-
-The project follows a risk-based testing approach.
-
-### Critical
-
-* Login.
-* Account access.
-* Fund transfers.
-* Bill payments.
-* Transaction validation.
-
-### High
-
-* User registration.
-* Account creation.
-* Loan requests.
-* Customer information.
-
-### Medium
-
-* Transaction searches.
-* Additional form validations.
-* Secondary navigation scenarios.
-
----
-
-## Test Types
-
-The framework will include:
-
-### Functional Testing
-
-Validates that application functionality behaves according to expected requirements.
-
-### Negative Testing
-
-Validates system behavior when invalid data or actions are introduced.
-
-### Regression Testing
-
-Ensures existing functionality remains stable after changes.
-
-### Smoke Testing
-
-Validates the application's most critical workflows.
-
-### UI Testing
-
-Validates the web interface through Selenium WebDriver.
-
-### API Testing
-
-Validates backend services through REST Assured.
-
-### Integration Testing
-
-Validates consistency between different application layers where appropriate.
-
----
-
-## Framework Architecture
-
-```text
-                 ┌─────────────────────┐
-                 │      JUnit Tests    │
-                 └──────────┬──────────┘
-                            │
-              ┌─────────────┴─────────────┐
-              │                           │
-              ▼                           ▼
-     ┌────────────────┐         ┌────────────────┐
-     │   UI Tests     │         │   API Tests    │
-     │    Selenium    │         │ REST Assured   │
-     └───────┬────────┘         └───────┬────────┘
-             │                          │
-             ▼                          ▼
-     ┌────────────────┐         ┌────────────────┐
-     │  Page Objects  │         │   API Clients  │
-     └───────┬────────┘         └───────┬────────┘
-             │                          │
-             └────────────┬─────────────┘
-                          ▼
-                 ┌─────────────────┐
-                 │ Test Utilities  │
-                 │ Config / Data   │
-                 │ Assertions      │
-                 │ Logging         │
-                 └────────┬────────┘
-                          │
-                          ▼
-                 ┌─────────────────┐
-                 │    ParaBank     │
-                 │   Simulated AUT │
-                 └─────────────────┘
-```
-
----
-
-## Technology Stack
-
-| Technology         | Purpose                         |
-| ------------------ | ------------------------------- |
-| Java               | Programming language            |
-| Selenium WebDriver | Web UI automation               |
-| REST Assured       | REST API automation             |
-| JUnit              | Test execution                  |
-| Maven              | Build and dependency management |
-| Page Object Model  | UI automation architecture      |
-| Git                | Version control                 |
-| GitHub             | Source code management          |
-| GitHub Actions     | CI/CD                           |
-| Allure             | Test reporting                  |
-
----
-
-## End-to-End Automation Flow
-
-A representative business workflow:
-
-```text
-Open ParaBank
-      ↓
-Register / Login
-      ↓
-Access Account
-      ↓
-Validate Balance
-      ↓
-Transfer Funds
-      ↓
-Validate Transaction
-      ↓
-Pay Bill
-      ↓
-Validate Payment
-      ↓
-Review Transaction History
-      ↓
-Logout
-```
-
-The same business operations can also be validated independently through the REST API.
-
----
-
-## Automation Design Principles
-
-### Page Object Model
-
-Each important page will have its own class.
-
-```text
-LoginPage
-HomePage
-AccountsOverviewPage
-OpenAccountPage
-TransferFundsPage
-BillPayPage
-FindTransactionsPage
-UpdateContactPage
-RequestLoanPage
-```
-
-### API Client Layer
-
-API operations will be separated from the test classes.
-
-```text
-AuthApi
-CustomerApi
-AccountsApi
-TransactionsApi
-TransferApi
-BillPayApi
-LoanApi
-```
-
-### Reusable Components
-
-Common functionality will be centralized to reduce code duplication.
-
-Examples:
-
-* WebDriver management.
-* Browser configuration.
-* API configuration.
-* Request specifications.
-* Response validation.
-* Test data management.
-* Screenshots.
-* Logging.
-* Custom assertions.
-
----
-
-## Test Reporting
-
-The framework will generate automated reports containing:
-
-* Test execution status.
-* Execution duration.
-* Passed tests.
-* Failed tests.
-* Error details.
-* Screenshots.
-* API information.
-* Execution history.
-
-**Allure Reports** will be used for visual test reporting.
-
----
-
-## CI/CD
-
-The automation framework will be integrated with **GitHub Actions**.
-
-The pipeline will execute the automated test suite after configured repository events.
-
-```text
-Git Push / Pull Request
-          ↓
-    GitHub Actions
-          ↓
-    Build Project
-          ↓
-   Execute UI Tests
-          ↓
-   Execute API Tests
-          ↓
-    Generate Report
-          ↓
-    Publish Results
-```
-
----
-
-## Execution
-
-### Prerequisites
-
-Install:
-
-* Java
-* Maven
-* Git
-
-### Clone Repository
+**Requirements:** Java 17+ and Maven 3.9+. Playwright downloads the browsers automatically on the first run.
 
 ```bash
-git clone <repository-url>
-cd banking-web-automation-framework
-```
-
-### Install Dependencies
-
-```bash
-mvn clean install
-```
-
-### Run All Tests
-
-```bash
+# All tests
 mvn test
+
+# Only one group (tags: smoke, ui, api, integration)
+mvn test -Dgroups=smoke
+
+# Watch the browser, slowed down
+mvn test -Dheadless=false -DslowMo=500
+
+# Another browser: chromium (default), firefox or webkit
+mvn test -Dbrowser=firefox
+
+# One test class
+mvn test -Dtest=LoginTest
 ```
 
-### Run UI Tests
+### Configuration
+
+Defaults are in `src/main/resources/config.properties`. Any value can be overridden with a `-D` flag or an environment variable:
+
+| Key | Default | Env variable |
+|---|---|---|
+| `baseUrl` | `https://parabank.parasoft.com/parabank/` | `BASE_URL` |
+| `browser` | `chromium` | `BROWSER` |
+| `headless` | `true` | `HEADLESS` |
+| `slowMo` | `0` | `SLOW_MO` |
+| `timeout` | `15000` (ms) | `TIMEOUT` |
+
+---
+
+## 📊 Reports
 
 ```bash
-mvn test -Dtest="ui.*"
+mvn allure:serve
 ```
 
-### Run API Tests
+Each test shows its steps, and failed UI tests include:
 
-```bash
-mvn test -Dtest="api.*"
-```
+- a **full-page screenshot**;
+- a **Playwright trace**: open it at [trace.playwright.dev](https://trace.playwright.dev) to replay every action, network call and DOM snapshot.
 
----
-
-## Test Documentation
-
-The project will include:
-
-* Test Strategy.
-* Test Plan.
-* Test Cases.
-* API Test Cases.
-* Test Data.
-* Requirements Traceability Matrix.
-* Automation Architecture.
-* Regression Suite.
-* Defect Documentation.
-* Test Evidence.
-* CI/CD Documentation.
+API calls attach their JSON responses.
 
 ---
 
-## Future Improvements
+## ⚙️ CI/CD
 
-* Parallel test execution.
-* Cross-browser testing.
-* Data-driven testing.
-* API schema validation.
-* Contract testing.
-* Dockerized execution.
-* Advanced Allure reporting.
-* Automatic screenshots on failures.
-* Video recording on failures.
-* Environment-based configuration.
-* Expanded CI/CD pipeline.
-* Integration with test management tools.
+GitHub Actions runs the suite on every push and pull request to `main`, and can be started manually choosing which tags to run. The Allure report and the traces of failed tests are uploaded as artifacts.
 
 ---
 
-## Portfolio Goals
+## 🗺️ Roadmap
 
-This project demonstrates practical experience in:
-
-* Selenium WebDriver.
-* Java.
-* JUnit.
-* REST Assured.
-* UI automation.
-* API automation.
-* End-to-end testing.
-* Functional testing.
-* Negative testing.
-* Regression testing.
-* Page Object Model.
-* Test architecture.
-* CI/CD.
-* Automated reporting.
-* QA engineering practices.
-
-The project demonstrates the ability to build a **maintainable automation framework that validates both frontend behavior and backend services using a simulated banking environment**.
+- [x] Framework core: configuration, Page Objects, API client, test data, failure artifacts
+- [x] Authentication: login, logout and registration (UI and API)
+- [x] UI vs. API consistency for the accounts overview
+- [x] CI with GitHub Actions and Allure report
+- [ ] Open account, transfer funds and bill payment
+- [ ] Transaction history and loan requests
+- [ ] Data-driven tests from external files
+- [ ] Cross-browser matrix in CI
+- [ ] Test strategy and test plan documents
 
 ---
 
-## Disclaimer
+## ⚠️ Known limitations
 
-This project uses **ParaBank solely as a test and demonstration environment**.
-
-No real bank accounts, real financial transactions, payment information, or real customer data are involved.
-
-The purpose of the project is exclusively **software testing, test automation, and QA portfolio development**.
+- ParaBank is a shared public demo: it can be slow, return temporary errors, or reset its database. A failure caused by the site being unavailable is not a defect in the tests.
+- ParaBank's API has no registration endpoint, so test customers are always registered through the UI.
 
 ---
 
-## Project Status
+<div align="center">
 
-**Status:** In Development
+Made with 💜 by **[María José Ospina Samboni](https://github.com/naksu707)**
 
-The framework is being developed incrementally, beginning with authentication and core banking workflows and progressively expanding UI automation, API coverage, regression testing, reporting, and CI/CD.
-
----
-
-## License
-
-This project is intended for educational and portfolio purposes.
+</div>
