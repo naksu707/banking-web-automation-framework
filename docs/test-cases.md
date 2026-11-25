@@ -10,9 +10,9 @@ Traceability between the test cases and their automated tests.
 |---|---|---|---|---|
 | TC-AUTH-01 | A registered customer logs in and sees the accounts overview | Critical | Smoke, positive | `LoginTest.validLoginOpensAccountsOverview` |
 | TC-AUTH-02 | The welcome message shows the customer's full name | Medium | Positive | `LoginTest.welcomeMessageShowsCustomerName` |
-| TC-AUTH-03 | Login with a wrong password does not give access | Critical | Smoke, negative | `LoginTest.invalidLoginIsRejected` (wrong password) |
-| TC-AUTH-04 | Login with an unknown username does not give access | Critical | Smoke, negative | `LoginTest.invalidLoginIsRejected` (unknown username) |
-| TC-AUTH-05 | Login with empty fields does not give access and shows a validation message | High | Negative | `LoginTest.invalidLoginIsRejected` (empty fields), `LoginTest.emptyCredentialsShowValidationMessage` |
+| TC-AUTH-03 | Login with a wrong password does not give access | Critical | Negative, security | `LoginTest.invalidLoginIsRejected` (wrong password) · ❌ fails: [BUG-003](defects.md#bug-003--wrong-credentials-open-another-customers-account) |
+| TC-AUTH-04 | Login with an unknown username does not give access | Critical | Negative, security | `LoginTest.invalidLoginIsRejected` (unknown username) · ❌ fails: [BUG-003](defects.md#bug-003--wrong-credentials-open-another-customers-account) |
+| TC-AUTH-05 | Login with empty fields does not give access and shows a validation message | High | Negative | `LoginTest.emptyCredentialsAreRejected`, `LoginTest.emptyCredentialsShowValidationMessage` |
 | TC-AUTH-06 | Logging out ends the session and shows the login form | Critical | Smoke | `LogoutTest.logoutReturnsToLoginForm` |
 | TC-AUTH-07 | Wrong credentials show a clear error message | Medium | Negative | `LoginTest.wrongCredentialsShowClearErrorMessage` · ❌ fails: [BUG-001](defects.md#bug-001--wrong-credentials-show-an-internal-server-error-instead-of-a-login-error) |
 | TC-REG-01 | A new customer registers and is logged in automatically | Critical | Smoke, positive | `RegistrationTest.newCustomerCanRegister` |
@@ -34,3 +34,28 @@ Traceability between the test cases and their automated tests.
 | ID | Test case | Priority | Type | Automated test |
 |---|---|---|---|---|
 | TC-INT-01 | The accounts overview lists the same accounts returned by the API | Critical | Integration | `AccountsAcrossLayersTest.overviewMatchesApiAccounts` |
+
+## Accounts · UI
+
+| ID | Test case | Priority | Type | Automated test |
+|---|---|---|---|---|
+| TC-ACC-01 | A customer opens a new checking account and sees the confirmation with the new account number | Critical | Smoke, positive | `OpenAccountTest.newAccountIsOpened` (CHECKING) |
+| TC-ACC-02 | A customer opens a new savings account and sees the confirmation with the new account number | Critical | Smoke, positive | `OpenAccountTest.newAccountIsOpened` (SAVINGS) |
+| TC-ACC-03 | The new account's details page shows its number and the chosen type | Medium | Positive | `OpenAccountTest.newAccountDetailsShowChosenType` |
+| TC-ACC-04 | The new account appears in the accounts overview | Critical | Positive | `OpenAccountTest.newAccountAppearsInOverview` |
+
+## Accounts · API
+
+| ID | Test case | Priority | Type | Automated test |
+|---|---|---|---|---|
+| TC-API-ACC-01 | `POST /createAccount` returns 200 and a new account of the requested type, owned by the customer | Critical | Smoke, positive | `AccountsApiTest.createAccountReturnsNewAccount` |
+| TC-API-ACC-02 | A new account is listed in `GET /customers/{id}/accounts` | Critical | Positive | `AccountsApiTest.newAccountIsListed` |
+| TC-API-ACC-03 | `GET /accounts/{id}` returns the same id, owner and type as the account creation | Medium | Positive | `AccountsApiTest.getAccountMatchesCreatedAccount` |
+| TC-API-ACC-04 | The initial deposit is debited from the source account: source before − deposit = source after | Critical | Positive, money integrity | `AccountsApiTest.initialDepositComesFromSourceAccount` |
+| TC-API-ACC-05 | The `POST /createAccount` response shows the account's real starting balance | Medium | Positive | `AccountsApiTest.createAccountResponseShowsStartingBalance` · ❌ fails: [BUG-002](defects.md#bug-002--the-createaccount-api-response-reports-a-balance-of-0-for-a-funded-account) |
+
+## Integration · Open account
+
+| ID | Test case | Priority | Type | Automated test |
+|---|---|---|---|---|
+| TC-INT-02 | An account opened in the UI exists in the API with the right owner, type and funding | Critical | Integration | `OpenAccountAcrossLayersTest.accountOpenedInUiIsStoredCorrectly` |

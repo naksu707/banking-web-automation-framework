@@ -12,7 +12,7 @@
 </div>
 
 > [!NOTE]
-> **Status: in progress 🚧** · Phase 1 (framework core and authentication) is complete. Core banking workflows are next.
+> **Status: in progress 🚧** · Phase 1 (framework core and authentication) is complete. Phase 2 (core banking workflows) has started with opening accounts; transfers and bill payment are next.
 
 ---
 
@@ -37,7 +37,7 @@ A test automation framework for **[ParaBank](https://parabank.parasoft.com/parab
 |---|---|---|---|
 | Login, logout and registration (positive and negative) | ✅ | ✅ | Done |
 | Accounts overview (UI vs. API consistency) | ✅ | ✅ | Done |
-| Open new account | | | Planned |
+| Open new account (checking and savings, funding, UI vs. API) | ✅ | ✅ | Done |
 | Transfer funds | | | Planned |
 | Bill payment | | | Planned |
 | Transaction history | | | Planned |
@@ -49,7 +49,9 @@ Detailed test cases and their traceability: **[docs/test-cases.md](docs/test-cas
 
 | ID | Defect | Severity | Status |
 |---|---|---|---|
+| [BUG-003](docs/defects.md#bug-003--wrong-credentials-open-another-customers-account) | **Wrong credentials open another customer's account** (authentication bypass in the web login) | **Critical** | Open |
 | [BUG-001](docs/defects.md#bug-001--wrong-credentials-show-an-internal-server-error-instead-of-a-login-error) | Wrong credentials show *"An internal error has occurred"* instead of a login error | Medium | Open |
+| [BUG-002](docs/defects.md#bug-002--the-createaccount-api-response-reports-a-balance-of-0-for-a-funded-account) | `POST /createAccount` responds with a balance of 0, although the new account holds the initial deposit | Low | Open |
 
 Tests that expose an open defect are tagged `known-defect` and skipped by default, so the pipeline stays green while the defect stays documented.
 
@@ -81,14 +83,15 @@ Tests that expose an open defect are tagged `known-defect` and skipped by defaul
 ```text
 src/test
 ├── java/parabank
-│   ├── api/            ParaBankApiClient and response models (CustomerDto, AccountDto)
-│   ├── data/           Customer, TestDataFactory (unique data), TestUsers (registers fresh customers)
+│   ├── api/            ParaBankApiClient (login, customers, accounts, createAccount) and models
+│   ├── data/           Customer, AccountType, TestDataFactory (unique data), TestUsers (fresh customers)
 │   ├── listeners/      EvidenceExtension (screenshot on failure), GlobalEvidenceCleaner
-│   ├── pages/          Page Objects: BasePage, HomePage, RegisterPage, AccountsOverviewPage
+│   ├── pages/          Page Objects: BasePage, HomePage, RegisterPage, AccountsOverviewPage,
+│   │                   OpenAccountPage, AccountActivityPage
 │   ├── tests/
-│   │   ├── ui/         LoginTest, LogoutTest, RegistrationTest
-│   │   ├── api/        AuthApiTest
-│   │   └── integration/ AccountsAcrossLayersTest (UI vs. API)
+│   │   ├── ui/         LoginTest, LogoutTest, RegistrationTest, OpenAccountTest
+│   │   ├── api/        AuthApiTest, AccountsApiTest
+│   │   └── integration/ AccountsAcrossLayersTest, OpenAccountAcrossLayersTest (UI vs. API)
 │   └── utils/          BaseTest, BaseApiTest, Config, CustomOptions, FileManager, Logs, PageProvider
 └── resources/
     ├── config.properties
@@ -163,7 +166,8 @@ GitHub Actions runs the suite on every push and pull request to `main`, and can 
 - [x] Authentication: login, logout and registration (UI and API)
 - [x] UI vs. API consistency for the accounts overview
 - [x] CI with GitHub Actions and Allure report
-- [ ] Open account, transfer funds and bill payment
+- [x] Open new account (UI, API and UI vs. API)
+- [ ] Transfer funds and bill payment
 - [ ] Transaction history and loan requests
 - [ ] Data-driven tests from external files
 - [ ] Cross-browser matrix in CI
@@ -175,11 +179,12 @@ GitHub Actions runs the suite on every push and pull request to `main`, and can 
 
 - ParaBank is a shared public demo: it can be slow, return temporary errors, or reset its database. A failure caused by the site being unavailable is not a defect in the tests.
 - ParaBank's API has no registration endpoint, so test customers are always registered through the UI.
+- **Rate limiting:** ParaBank sits behind Cloudflare, which blocks an IP that sends too many requests in a short time (HTTP 429, *"Error 1015: You are being rate limited"*). While blocked, pages do not load and UI tests time out waiting for elements. Running the full suite many times in a row triggers it. Wait 15–30 minutes, and during development run only the class you are working on (`mvn test -Dtest=LoginTest`). The API client reports a 429 with a clear message, and test customer registration retries up to 3 times before failing with *"ParaBank may be unavailable"*.
 
 ---
 
 <div align="center">
 
-Made by 💜 **[Maria Jose Ospina](https://github.com/naksu707)** 💜
+Made with 💜 by **[María José Ospina Samboni](https://github.com/naksu707)**
 
 </div>

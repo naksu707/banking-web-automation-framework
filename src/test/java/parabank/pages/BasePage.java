@@ -28,6 +28,18 @@ public abstract class BasePage {
         return page.locator("#leftPanel p.smallText");
     }
 
+    @Step("Go to \"Open New Account\"")
+    public OpenAccountPage goToOpenNewAccount() {
+        page.locator("#leftPanel a[href*='openaccount.htm']").click();
+        return new OpenAccountPage(page);
+    }
+
+    @Step("Go to \"Accounts Overview\"")
+    public AccountsOverviewPage goToAccountsOverview() {
+        page.locator("#leftPanel a[href*='overview.htm']").click();
+        return new AccountsOverviewPage(page);
+    }
+
     @Step("Log out")
     public HomePage logOut() {
         page.getByRole(AriaRole.LINK, new Page.GetByRoleOptions().setName("Log Out")).click();

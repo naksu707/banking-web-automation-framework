@@ -18,4 +18,9 @@ public class AccountsOverviewPage extends BasePage {
     public Locator accountLinks() {
         return accountsTable().locator("tbody a");
     }
+
+    /** Link of one specific account in the overview table. */
+    public Locator accountLink(String accountNumber) {
+        return accountsTable().locator("tbody a:text-is('" + accountNumber + "')");
+    }
 }
