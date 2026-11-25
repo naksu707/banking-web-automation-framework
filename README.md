@@ -14,6 +14,8 @@
 > [!NOTE]
 > **Status: in progress 🚧** · Phase 1 (framework core and authentication) is complete. Phase 2 (core banking workflows) has started with opening accounts; transfers and bill payment are next.
 
+<img src="https://github.com/naksu707/banking-web-automation-framework/actions/workflows/tests.yml/badge.svg" />
+
 ---
 
 ## 💡 About
