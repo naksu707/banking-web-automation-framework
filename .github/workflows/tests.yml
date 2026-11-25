@@ -29,7 +29,8 @@ jobs:
           cache: maven
 
       - name: Install Playwright browser
-        run: mvn -B -q compile exec:java -e -D exec.mainClass=com.microsoft.playwright.CLI -D exec.args="install --with-deps chromium"
+        # Playwright is a test-scoped dependency, so exec:java needs the test classpath
+        run: mvn -B -q test-compile exec:java -e -Dexec.classpathScope=test -Dexec.mainClass=com.microsoft.playwright.CLI -Dexec.args="install --with-deps chromium"
 
       - name: Run tests
         run: mvn -B test -Dheadless=true -Dgroups="${{ github.event.inputs.groups }}"
