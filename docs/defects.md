@@ -249,3 +249,141 @@ The transfer is rejected because the source and destination are the same account
 **Actual result**
 
 The API answers `200 Successfully transferred $40.00 from account #A to account #A`.
+
+---
+
+## BUG-008 · Bill payments accept a negative amount, which adds money to the account
+
+| Field | Value |
+|---|---|
+| **Status** | Open |
+| **Severity** | Critical: a customer can increase their own balance by "paying" a negative bill |
+| **Priority** | Highest |
+| **Area** | Bill pay · REST API (`POST /services/bank/billpay`) and UI (Bill Pay) |
+| **Environment** | https://parabank.parasoft.com/parabank/ · API and Chromium · found 2026-11-25 |
+| **Automated tests** | `BillPayApiTest.negativeAmountIsRejected`, `BillPayTest.negativeOrZeroAmountIsRejected` ("-20") (tag `known-defect`) |
+| **Related test cases** | TC-API-BILL-03, TC-BILL-06 |
+| **Related defect** | [BUG-004](#bug-004--transfers-accept-a-negative-amount-which-moves-money-out-of-the-destination-account) (same missing validation in transfers) |
+
+**Steps to reproduce**
+
+1. Log in and note the balance of account A (for example, 515.50).
+2. Send `POST /services/bank/billpay?accountId={A}&amount=-60.00` with a valid payee in the JSON body (or enter `-20` as the amount in *Bill Pay*).
+
+**Expected result**
+
+The payment is rejected (HTTP 400 / validation message) and the balance stays the same.
+
+**Actual result**
+
+The API answers `200 {"payeeName":"City Power","amount":-60.00,"accountId":15564}` and the balance goes **up** from 515.50 to 575.50. The UI shows *"Bill Payment Complete"*.
+
+**Impact**
+
+- Customers can create money in their own account, with no limit and no approval.
+- The payee is recorded as having been paid a negative amount, which corrupts the transaction history.
+
+---
+
+## BUG-009 · Bill payments do not check the available balance and leave the account overdrawn
+
+| Field | Value |
+|---|---|
+| **Status** | Open |
+| **Severity** | Critical: bills can be paid with money the customer does not have |
+| **Priority** | Highest |
+| **Area** | Bill pay · REST API (`POST /services/bank/billpay`) |
+| **Environment** | https://parabank.parasoft.com/parabank/ · API · found 2026-11-25 |
+| **Automated test** | `BillPayApiTest.amountAboveBalanceIsRejected` (tag `known-defect`) |
+| **Related test cases** | TC-API-BILL-04 |
+| **Related defect** | [BUG-005](#bug-005--transfers-do-not-check-the-available-balance-and-leave-the-account-overdrawn) (same missing check in transfers) |
+
+**Steps to reproduce**
+
+1. Log in and note the balance of account A (for example, 455.50).
+2. Send `POST /services/bank/billpay?accountId={A}&amount=1455.50` (balance + 1,000) with a valid payee.
+
+**Expected result**
+
+The payment is rejected for insufficient funds and the balance stays the same.
+
+**Actual result**
+
+The API answers `200 {"payeeName":"Water Utility","amount":1455.50,...}` and the balance ends at **-1,000.00**.
+
+**Impact**
+
+- Unlimited overdraft through bill payments, without an approved credit line.
+
+---
+
+## BUG-010 · Bill payments accept an amount of zero
+
+| Field | Value |
+|---|---|
+| **Status** | Open |
+| **Severity** | Medium: no money moves, but an empty payment is confirmed and recorded |
+| **Priority** | Medium |
+| **Area** | Bill pay · UI (Bill Pay) |
+| **Environment** | https://parabank.parasoft.com/parabank/ · Chromium · found 2026-11-25 |
+| **Automated test** | `BillPayTest.negativeOrZeroAmountIsRejected` ("0") (tag `known-defect`) |
+| **Related test cases** | TC-BILL-07 |
+| **Related defect** | [BUG-006](#bug-006--transfers-accept-an-amount-of-zero) (same missing validation in transfers) |
+
+**Steps to reproduce**
+
+1. Log in and open *Bill Pay*.
+2. Fill in a valid payee, enter `0` as the amount and click **Send Payment**.
+
+**Expected result**
+
+A validation message asks for an amount greater than zero.
+
+**Actual result**
+
+The page shows *"Bill Payment Complete"* for $0.00.
+
+**Notes**
+
+- The form only checks that the amount is a number (`parseFloat`), so any negative or zero value passes the browser validation and reaches the service, which does not validate it either.
+
+---
+
+## BUG-011 · A confirmed payment or transfer sometimes takes no money out of the source account
+
+| Field | Value |
+|---|---|
+| **Status** | Open |
+| **Severity** | Critical: the customer is told the money was sent, but the source account keeps it |
+| **Priority** | Highest |
+| **Area** | Bill pay and Transfer Funds · UI (requests sent by the browser through `services_proxy`) |
+| **Environment** | https://parabank.parasoft.com/parabank/ · Chromium · found 2026-11-25 |
+| **Reproducibility** | Intermittent: about half of the runs on 2026-11-25 |
+| **Automated test** | `BillPayAcrossLayersTest.uiBillPaymentDebitsAccount` (tag `known-defect`) |
+| **Related test cases** | TC-INT-04, TC-INT-03 |
+| **Evidence** | `docs/evidence/BUG-011-bill-pay-not-debited.png` |
+
+**Steps to reproduce**
+
+1. Register a new customer and note the balance of the first account (515.50).
+2. Open *Bill Pay*, fill in a valid payee, enter `27.75`, choose that account and click **Send Payment**.
+3. Check the balance in *Accounts Overview* and through `GET /services/bank/accounts/{id}`, for up to 15 seconds.
+
+**Expected result**
+
+The balance is 487.75 (515.50 − 27.75) in both places.
+
+**Actual result**
+
+The page shows *"Bill Payment Complete"* for the right account, but the balance is still **515.50** in the UI and in the API 15 seconds later. In other runs the same steps debit the account correctly.
+
+**Notes**
+
+- The same payment made directly through the API (`POST /billpay`) was always debited (`BillPayApiTest.billPayDebitsExactAmount`).
+- Transfers in the UI showed the same pattern twice on 2026-11-25 (`TransferAcrossLayersTest`): the destination received the money but the source balance did not change, so money was created. The test passed in the next runs, so it stays in the default run while the pattern is investigated.
+- The root cause is not known. It may be in how the public demo handles requests from the browser, so it may not reproduce on a local `parasoft/parabank` instance.
+
+**Impact**
+
+- The customer and the payee see a payment as done while the money never left the account, so the books no longer balance.
+- Because it is intermittent, it is hard to detect without checking every confirmation against the back end, which is what this test does.

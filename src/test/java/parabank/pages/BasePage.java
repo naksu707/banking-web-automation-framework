@@ -40,6 +40,12 @@ public abstract class BasePage {
         return new TransferFundsPage(page);
     }
 
+    @Step("Go to \"Bill Pay\"")
+    public BillPayPage goToBillPay() {
+        page.locator("#leftPanel a[href*='billpay.htm']").click();
+        return new BillPayPage(page);
+    }
+
     @Step("Go to \"Accounts Overview\"")
     public AccountsOverviewPage goToAccountsOverview() {
         page.locator("#leftPanel a[href*='overview.htm']").click();

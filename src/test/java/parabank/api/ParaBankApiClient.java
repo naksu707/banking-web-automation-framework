@@ -7,9 +7,11 @@ import io.qameta.allure.Allure;
 import com.microsoft.playwright.options.RequestOptions;
 import io.qameta.allure.Step;
 import parabank.data.AccountType;
+import parabank.data.Payee;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Client for the ParaBank REST API (services/bank/...), built on Playwright's APIRequestContext.
@@ -62,6 +64,25 @@ public class ParaBankApiClient {
                 .setQueryParam("amount", amount)));
     }
 
+    @Step("API: pay {amount} to {payee.name} from account {accountId}")
+    public APIResponse billPay(long accountId, String amount, Payee payee) {
+        Map<String, Object> body = Map.of(
+                "name", payee.name(),
+                "address", Map.of(
+                        "street", payee.street(),
+                        "city", payee.city(),
+                        "state", payee.state(),
+                        "zipCode", payee.zipCode()),
+                "phoneNumber", payee.phoneNumber(),
+                "accountNumber", Long.parseLong(payee.accountNumber()));
+        return attach("POST billpay", request.post(BASE + "billpay", RequestOptions.create()
+                .setQueryParam("accountId", String.valueOf(accountId))
+                .setQueryParam("amount", amount)
+                .setHeader("Content-Type", "application/json")
+                .setHeader("Accept", "application/json")
+                .setData(GSON.toJson(body))));
+    }
+
     /** Logs in and returns the customer, failing fast if the credentials are rejected. */
     public CustomerDto loginAndGetCustomer(String username, String password) {
         APIResponse response = login(username, password);
@@ -89,6 +110,24 @@ public class ParaBankApiClient {
 
     public java.math.BigDecimal balanceOf(long accountId) {
         return account(accountId).balance;
+    }
+
+    /**
+     * Reads the balance until it equals the expected value, for up to 15 seconds.
+     * ParaBank sometimes takes a moment to show a change made in the UI. Returns the last balance read.
+     */
+    public java.math.BigDecimal awaitBalance(long accountId, java.math.BigDecimal expected) {
+        java.math.BigDecimal balance = balanceOf(accountId);
+        for (int i = 0; i < 30 && expected.compareTo(balance) != 0; i++) {
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+            balance = balanceOf(accountId);
+        }
+        return balance;
     }
 
     public static <T> T parse(APIResponse response, Class<T> type) {

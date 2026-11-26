@@ -23,4 +23,10 @@ public class AccountsOverviewPage extends BasePage {
     public Locator accountLink(String accountNumber) {
         return accountsTable().locator("tbody a:text-is('" + accountNumber + "')");
     }
+
+    /** Balance shown for one account, as text (for example "$515.50"). Waits for the AJAX table to load. */
+    public String balanceText(String accountNumber) {
+        accountLink(accountNumber).waitFor();
+        return accountsTable().locator("tbody tr:has(a:text-is('" + accountNumber + "')) td").nth(1).innerText().trim();
+    }
 }

@@ -12,7 +12,7 @@
 </div>
 
 > [!NOTE]
-> **Status: in progress 🚧** · Phase 1 (framework core and authentication) is complete. Phase 2 (core banking workflows) has started with opening accounts; transfers and bill payment are next.
+> **Status: in progress 🚧** · Phase 1 (framework core and authentication) is complete. Phase 2 (core banking workflows) covers opening accounts, transfers and bill payment; transaction history and loans are next.
 
 ---
 
@@ -39,7 +39,7 @@ A test automation framework for **[ParaBank](https://parabank.parasoft.com/parab
 | Accounts overview (UI vs. API consistency) | ✅ | ✅ | Done |
 | Open new account (checking and savings, funding, UI vs. API) | ✅ | ✅ | Done |
 | Transfer funds (confirmation, exact amounts, invalid amounts, UI vs. API) | ✅ | ✅ | Done |
-| Bill payment | | | Planned |
+| Bill payment (confirmation, required fields, account mismatch, invalid amounts, UI vs. API) | ✅ | ✅ | Done |
 | Transaction history | | | Planned |
 | Loan request | | | Planned |
 
@@ -52,8 +52,12 @@ Detailed test cases and their traceability: **[docs/test-cases.md](docs/test-cas
 | [BUG-003](docs/defects.md#bug-003--wrong-credentials-open-another-customers-account) | **Wrong credentials open another customer's account** (authentication bypass in the web login) | **Critical** | Open |
 | [BUG-004](docs/defects.md#bug-004--transfers-accept-a-negative-amount-which-moves-money-out-of-the-destination-account) | **Negative transfer amounts are accepted** and move money out of the destination account | **Critical** | Open |
 | [BUG-005](docs/defects.md#bug-005--transfers-do-not-check-the-available-balance-and-leave-the-account-overdrawn) | **Transfers do not check the balance** and leave the account overdrawn | **Critical** | Open |
+| [BUG-008](docs/defects.md#bug-008--bill-payments-accept-a-negative-amount-which-adds-money-to-the-account) | **Negative bill payments are accepted** and add money to the account | **Critical** | Open |
+| [BUG-009](docs/defects.md#bug-009--bill-payments-do-not-check-the-available-balance-and-leave-the-account-overdrawn) | **Bill payments do not check the balance** and leave the account overdrawn | **Critical** | Open |
+| [BUG-011](docs/defects.md#bug-011--a-confirmed-payment-or-transfer-sometimes-takes-no-money-out-of-the-source-account) | **A confirmed payment sometimes takes no money out of the account** (intermittent) | **Critical** | Open |
 | [BUG-001](docs/defects.md#bug-001--wrong-credentials-show-an-internal-server-error-instead-of-a-login-error) | Wrong credentials show *"An internal error has occurred"* instead of a login error | Medium | Open |
 | [BUG-006](docs/defects.md#bug-006--transfers-accept-an-amount-of-zero) | Transfers accept an amount of zero | Medium | Open |
+| [BUG-010](docs/defects.md#bug-010--bill-payments-accept-an-amount-of-zero) | Bill payments accept an amount of zero | Medium | Open |
 | [BUG-002](docs/defects.md#bug-002--the-createaccount-api-response-reports-a-balance-of-0-for-a-funded-account) | `POST /createAccount` responds with a balance of 0, although the new account holds the initial deposit | Low | Open |
 | [BUG-007](docs/defects.md#bug-007--a-transfer-to-the-same-account-is-accepted) | A transfer to the same account is accepted | Low | Open |
 
@@ -87,16 +91,16 @@ Tests that expose an open defect are tagged `known-defect` and skipped by defaul
 ```text
 src/test
 ├── java/parabank
-│   ├── api/            ParaBankApiClient (login, customers, accounts, createAccount, transfer) and models
+│   ├── api/            ParaBankApiClient (login, customers, accounts, createAccount, transfer, billpay) and models
 │   ├── data/           Customer, AccountType, TestDataFactory (unique data), TestUsers (fresh customers)
 │   ├── listeners/      EvidenceExtension (screenshot on failure), GlobalEvidenceCleaner
 │   ├── pages/          Page Objects: BasePage, HomePage, RegisterPage, AccountsOverviewPage,
-│   │                   OpenAccountPage, AccountActivityPage, TransferFundsPage
+│   │                   OpenAccountPage, AccountActivityPage, TransferFundsPage, BillPayPage
 │   ├── tests/
-│   │   ├── ui/         LoginTest, LogoutTest, RegistrationTest, OpenAccountTest, TransferFundsTest
-│   │   ├── api/        AuthApiTest, AccountsApiTest, TransferApiTest
+│   │   ├── ui/         LoginTest, LogoutTest, RegistrationTest, OpenAccountTest, TransferFundsTest, BillPayTest
+│   │   ├── api/        AuthApiTest, AccountsApiTest, TransferApiTest, BillPayApiTest
 │   │   └── integration/ AccountsAcrossLayersTest, OpenAccountAcrossLayersTest,
-│   │                    TransferAcrossLayersTest (UI vs. API)
+│   │                    TransferAcrossLayersTest, BillPayAcrossLayersTest (UI vs. API)
 │   └── utils/          BaseTest, BaseApiTest, Config, CustomOptions, FileManager, Logs, PageProvider
 └── resources/
     ├── config.properties
@@ -173,7 +177,7 @@ GitHub Actions runs the suite on every push and pull request to `main`, and can 
 - [x] CI with GitHub Actions and Allure report
 - [x] Open new account (UI, API and UI vs. API)
 - [x] Transfer funds (UI, API and UI vs. API)
-- [ ] Bill payment
+- [x] Bill payment (UI, API and UI vs. API)
 - [ ] Transaction history and loan requests
 - [ ] Data-driven tests from external files
 - [ ] Cross-browser matrix in CI
@@ -192,6 +196,6 @@ GitHub Actions runs the suite on every push and pull request to `main`, and can 
 
 <div align="center">
 
-Made by 💜 **[María José Ospina Samboni](https://github.com/naksu707)** 💜
+Made with 💜 by **[María José Ospina Samboni](https://github.com/naksu707)**
 
 </div>

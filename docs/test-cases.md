@@ -86,3 +86,30 @@ Traceability between the test cases and their automated tests.
 | ID | Test case | Priority | Type | Automated test |
 |---|---|---|---|---|
 | TC-INT-03 | A transfer made in the UI moves exactly the amount between the two accounts in the back end | Critical | Integration, money integrity | `TransferAcrossLayersTest.uiTransferUpdatesBothBalances` |
+
+## Bill pay · UI
+
+| ID | Test case | Priority | Type | Automated test |
+|---|---|---|---|---|
+| TC-BILL-01 | A bill payment shows "Bill Payment Complete" with the payee, the amount and the account | Critical | Smoke, positive | `BillPayTest.billPaymentShowsConfirmation` |
+| TC-BILL-02 | An empty form shows a required-field message for every field | Medium | Negative, validation | `BillPayTest.emptyFormShowsRequiredMessages` |
+| TC-BILL-03 | Different payee and verify account numbers are rejected and no money leaves the account | Critical | Negative | `BillPayTest.accountMismatchIsRejected` |
+| TC-BILL-04 | An empty amount shows "The amount cannot be empty" and no money leaves the account | High | Negative | `BillPayTest.invalidAmountIsRejected` ("") |
+| TC-BILL-05 | A non-numeric amount shows "Please enter a valid amount" and no money leaves the account | High | Negative | `BillPayTest.invalidAmountIsRejected` ("abc") |
+| TC-BILL-06 | A negative amount is rejected and no money leaves the account | Critical | Negative | `BillPayTest.negativeOrZeroAmountIsRejected` ("-20") · ❌ fails: [BUG-008](defects.md#bug-008--bill-payments-accept-a-negative-amount-which-adds-money-to-the-account) |
+| TC-BILL-07 | A zero amount is rejected | High | Negative | `BillPayTest.negativeOrZeroAmountIsRejected` ("0") · ❌ fails: [BUG-010](defects.md#bug-010--bill-payments-accept-an-amount-of-zero) |
+
+## Bill pay · API
+
+| ID | Test case | Priority | Type | Automated test |
+|---|---|---|---|---|
+| TC-API-BILL-01 | `POST /billpay` returns 200 with the payee name, the amount and the account | Critical | Smoke, positive | `BillPayApiTest.billPaySucceeds` |
+| TC-API-BILL-02 | A bill payment takes exactly the amount out of the account | Critical | Positive, money integrity | `BillPayApiTest.billPayDebitsExactAmount` |
+| TC-API-BILL-03 | A negative amount returns 400 and no money moves | Critical | Negative | `BillPayApiTest.negativeAmountIsRejected` · ❌ fails: [BUG-008](defects.md#bug-008--bill-payments-accept-a-negative-amount-which-adds-money-to-the-account) |
+| TC-API-BILL-04 | An amount greater than the balance returns 400 and no money moves | Critical | Negative | `BillPayApiTest.amountAboveBalanceIsRejected` · ❌ fails: [BUG-009](defects.md#bug-009--bill-payments-do-not-check-the-available-balance-and-leave-the-account-overdrawn) |
+
+## Integration · Bill pay
+
+| ID | Test case | Priority | Type | Automated test |
+|---|---|---|---|---|
+| TC-INT-04 | A bill paid in the UI takes exactly the amount out of the account in the back end | Critical | Integration, money integrity | `BillPayAcrossLayersTest.uiBillPaymentDebitsAccount` · ❌ fails intermittently: [BUG-011](defects.md#bug-011--a-confirmed-payment-or-transfer-sometimes-takes-no-money-out-of-the-source-account) |
