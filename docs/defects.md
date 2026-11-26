@@ -461,3 +461,41 @@ The API answers `200 {"loanProviderName":"Wealth Securities Dynamic Loans (WSDL)
 **Impact**
 
 - Customers receive cash on top of the loan instead of paying a down payment.
+
+---
+
+## BUG-014 · Find Transactions shows other customers' transactions by id
+
+| Field | Value |
+|---|---|
+| **Status** | Open |
+| **Severity** | Critical: any customer can read other customers' transactions (broken access control) |
+| **Priority** | Highest |
+| **Area** | Transactions · UI (Find Transactions, *Find by Transaction ID*) |
+| **Environment** | https://parabank.parasoft.com/parabank/ · Chromium · found 2026-11-26 |
+| **Automated test** | `FindTransactionsTest.otherCustomersTransactionIsNotShown` (tag `known-defect`) |
+| **Related test cases** | TC-TXN-07 |
+| **Evidence** | `docs/evidence/BUG-014-other-customers-transaction.png` |
+
+**Steps to reproduce**
+
+1. Customer B makes any transfer and notes the id of the "Funds Transfer Sent" transaction.
+2. Customer A logs in and opens *Find Transactions*.
+3. Customer A selects one of their own accounts, enters B's transaction id in *Find by Transaction ID* and clicks **Find Transactions**.
+
+**Expected result**
+
+No result (or an error), because the transaction does not belong to the selected account or to customer A.
+
+**Actual result**
+
+The page shows *"Transaction Results"* with B's transaction: date, description and amount.
+
+**Notes**
+
+- The page ignores the selected account for this search: it calls `GET /services_proxy/bank/transactions/{id}` with no account or customer check. The other searches (date, date range, amount) are scoped to the selected account.
+- Transaction ids are sequential, so they can be enumerated to read every customer's history.
+
+**Impact**
+
+- Exposure of other customers' financial data (amounts, dates, payees in bill payments): a privacy and compliance issue for any bank.

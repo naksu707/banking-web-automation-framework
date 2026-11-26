@@ -93,6 +93,32 @@ public class ParaBankApiClient {
                 .setHeader("Accept", "application/json")));
     }
 
+    @Step("API: get the transactions of account {accountId}")
+    public APIResponse getTransactions(long accountId) {
+        return attach("GET transactions", request.get(BASE + "accounts/" + accountId + "/transactions"));
+    }
+
+    @Step("API: get transaction {transactionId}")
+    public APIResponse getTransaction(long transactionId) {
+        return attach("GET transaction", request.get(BASE + "transactions/" + transactionId));
+    }
+
+    @Step("API: find transactions of {amount} in account {accountId}")
+    public APIResponse findTransactionsByAmount(long accountId, String amount) {
+        return attach("GET transactions by amount",
+                request.get(BASE + "accounts/" + accountId + "/transactions/amount/" + amount));
+    }
+
+    @Step("API: find transactions of account {accountId} from {fromDate} to {toDate}")
+    public APIResponse findTransactionsByDateRange(long accountId, String fromDate, String toDate) {
+        return attach("GET transactions by date range",
+                request.get(BASE + "accounts/" + accountId + "/transactions/fromDate/" + fromDate + "/toDate/" + toDate));
+    }
+
+    public List<TransactionDto> transactionsOf(long accountId) {
+        return Arrays.asList(parse(expectOk(getTransactions(accountId)), TransactionDto[].class));
+    }
+
     /** Logs in and returns the customer, failing fast if the credentials are rejected. */
     public CustomerDto loginAndGetCustomer(String username, String password) {
         APIResponse response = login(username, password);

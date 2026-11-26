@@ -40,6 +40,12 @@ public abstract class BasePage {
         return new RequestLoanPage(page);
     }
 
+    @Step("Go to \"Find Transactions\"")
+    public FindTransactionsPage goToFindTransactions() {
+        page.locator("#leftPanel a[href*='findtrans.htm']").click();
+        return new FindTransactionsPage(page);
+    }
+
     @Step("Go to \"Transfer Funds\"")
     public TransferFundsPage goToTransferFunds() {
         page.locator("#leftPanel a[href*='transfer.htm']").click();

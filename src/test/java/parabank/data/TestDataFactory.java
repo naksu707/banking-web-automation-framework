@@ -45,6 +45,12 @@ public final class TestDataFactory {
                 String.valueOf(random.nextInt(10000, 99999)));
     }
 
+    /** An amount with random cents, for example "43.17", so a search by amount finds only this test's transaction. */
+    public static String uniqueAmount() {
+        ThreadLocalRandom random = ThreadLocalRandom.current();
+        return random.nextInt(11, 90) + "." + String.format("%02d", random.nextInt(1, 100));
+    }
+
     /** Short, unique username: "qa" + base-36 timestamp + 2 random digits. */
     public static String uniqueUsername() {
         return "qa" + Long.toString(System.currentTimeMillis(), 36)

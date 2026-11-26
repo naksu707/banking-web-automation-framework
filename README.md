@@ -12,7 +12,7 @@
 </div>
 
 > [!NOTE]
-> **Status: in progress 🚧** · Phase 1 (framework core and authentication) is complete. Phase 2 (core banking workflows) covers opening accounts, transfers, bill payment and loan requests; transaction history is next.
+> **Status: in progress 🚧** · Phase 1 (framework core and authentication) is complete. Phase 2 (core banking workflows) covers opening accounts, transfers, bill payment and loan requests; transaction history is in progress.
 
 ---
 
@@ -41,7 +41,7 @@ A test automation framework for **[ParaBank](https://parabank.parasoft.com/parab
 | Transfer funds (confirmation, exact amounts, invalid amounts, UI vs. API) | ✅ | ✅ | Done |
 | Bill payment (confirmation, required fields, account mismatch, invalid amounts, UI vs. API) | ✅ | ✅ | Done |
 | Loan requests (approval, denial rules, invalid down payments, UI vs. API) | ✅ | ✅ | Done |
-| Transaction history | | | Planned |
+| Transaction history (search by amount, id and dates, validation, other customers' data, UI vs. API) | ✅ | ✅ | Done |
 
 Detailed test cases and their traceability: **[docs/test-cases.md](docs/test-cases.md)**.
 
@@ -50,6 +50,7 @@ Detailed test cases and their traceability: **[docs/test-cases.md](docs/test-cas
 | ID | Defect | Severity | Status |
 |---|---|---|---|
 | [BUG-003](docs/defects.md#bug-003--wrong-credentials-open-another-customers-account) | **Wrong credentials open another customer's account** (authentication bypass in the web login) | **Critical** | Open |
+| [BUG-014](docs/defects.md#bug-014--find-transactions-shows-other-customers-transactions-by-id) | **Find Transactions shows other customers' transactions** by id | **Critical** | Open |
 | [BUG-004](docs/defects.md#bug-004--transfers-accept-a-negative-amount-which-moves-money-out-of-the-destination-account) | **Negative transfer amounts are accepted** and move money out of the destination account | **Critical** | Open |
 | [BUG-005](docs/defects.md#bug-005--transfers-do-not-check-the-available-balance-and-leave-the-account-overdrawn) | **Transfers do not check the balance** and leave the account overdrawn | **Critical** | Open |
 | [BUG-008](docs/defects.md#bug-008--bill-payments-accept-a-negative-amount-which-adds-money-to-the-account) | **Negative bill payments are accepted** and add money to the account | **Critical** | Open |
@@ -93,19 +94,20 @@ Tests that expose an open defect are tagged `known-defect` and skipped by defaul
 ```text
 src/test
 ├── java/parabank
-│   ├── api/            ParaBankApiClient (login, customers, accounts, createAccount, transfer, billpay, requestLoan) and models
+│   ├── api/            ParaBankApiClient (login, customers, accounts, createAccount, transfer, billpay, requestLoan, transactions) and models
 │   ├── data/           Customer, AccountType, TestDataFactory (unique data), TestUsers (fresh customers)
 │   ├── listeners/      EvidenceExtension (screenshot on failure), GlobalEvidenceCleaner
 │   ├── pages/          Page Objects: BasePage, HomePage, RegisterPage, AccountsOverviewPage,
 │   │                   OpenAccountPage, AccountActivityPage, TransferFundsPage, BillPayPage,
-│   │                   RequestLoanPage
+│   │                   RequestLoanPage, FindTransactionsPage
 │   ├── tests/
 │   │   ├── ui/         LoginTest, LogoutTest, RegistrationTest, OpenAccountTest, TransferFundsTest, BillPayTest,
-│   │   │               RequestLoanTest
-│   │   ├── api/        AuthApiTest, AccountsApiTest, TransferApiTest, BillPayApiTest, LoanApiTest
+│   │   │               RequestLoanTest, FindTransactionsTest
+│   │   ├── api/        AuthApiTest, AccountsApiTest, TransferApiTest, BillPayApiTest, LoanApiTest,
+│   │   │               TransactionsApiTest
 │   │   └── integration/ AccountsAcrossLayersTest, OpenAccountAcrossLayersTest,
 │   │                    TransferAcrossLayersTest, BillPayAcrossLayersTest,
-│   │                    LoanAcrossLayersTest (UI vs. API)
+│   │                    LoanAcrossLayersTest, TransactionsAcrossLayersTest (UI vs. API)
 │   └── utils/          BaseTest, BaseApiTest, Config, CustomOptions, FileManager, Logs, PageProvider
 └── resources/
     ├── config.properties
@@ -184,7 +186,7 @@ GitHub Actions runs the suite on every push and pull request to `main`, and can 
 - [x] Transfer funds (UI, API and UI vs. API)
 - [x] Bill payment (UI, API and UI vs. API)
 - [x] Loan requests (UI, API and UI vs. API)
-- [ ] Transaction history
+- [x] Transaction history
 - [ ] Data-driven tests from external files
 - [ ] Cross-browser matrix in CI
 - [ ] Test strategy and test plan documents
@@ -202,6 +204,6 @@ GitHub Actions runs the suite on every push and pull request to `main`, and can 
 
 <div align="center">
 
-Made with 💜 by **[María José Ospina Samboni](https://github.com/naksu707)**
+Made by 💜 **[María José Ospina Samboni](https://github.com/naksu707)** 💜
 
 </div>

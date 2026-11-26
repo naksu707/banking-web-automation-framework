@@ -141,3 +141,31 @@ ParaBank approves a loan when the down payment is not greater than the customer'
 | ID | Test case | Priority | Type | Automated test |
 |---|---|---|---|---|
 | TC-INT-05 | A loan approved in the UI exists in the back end as a LOAN account and the down payment was taken | Critical | Integration, money integrity | `LoanAcrossLayersTest.uiLoanMatchesBackEnd` |
+
+## Transactions · UI
+
+| ID | Test case | Priority | Type | Automated test |
+|---|---|---|---|---|
+| TC-TXN-01 | Searching by amount shows the transfer as a debit with the exact amount | Critical | Smoke, positive | `FindTransactionsTest.findByAmountShowsTransfer` |
+| TC-TXN-02 | Searching by transaction id shows only that transaction | Critical | Positive | `FindTransactionsTest.findByIdShowsTransaction` |
+| TC-TXN-03 | Searching by a date range around today shows today's transfer | Medium | Positive | `FindTransactionsTest.findByDateRangeShowsTransfer` |
+| TC-TXN-04 | A non-numeric transaction id shows "Invalid transaction ID" | Medium | Negative, validation | `FindTransactionsTest.invalidSearchShowsMessage` (id) |
+| TC-TXN-05 | A non-numeric amount shows "Invalid amount" | Medium | Negative, validation | `FindTransactionsTest.invalidSearchShowsMessage` (amount) |
+| TC-TXN-06 | A date in the wrong format shows "Invalid date format" | Medium | Negative, validation | `FindTransactionsTest.invalidSearchShowsMessage` (date) |
+| TC-TXN-07 | Searching by the id of another customer's transaction shows nothing | Critical | Negative, security | `FindTransactionsTest.otherCustomersTransactionIsNotShown` · ❌ fails: [BUG-014](defects.md#bug-014--find-transactions-shows-other-customers-transactions-by-id) |
+
+## Transactions · API
+
+| ID | Test case | Priority | Type | Automated test |
+|---|---|---|---|---|
+| TC-API-TXN-01 | A transfer is recorded as a debit in the source and a credit in the destination | Critical | Smoke, positive | `TransactionsApiTest.transferIsRecordedInBothAccounts` |
+| TC-API-TXN-02 | A bill payment is recorded as a debit described as "Bill Payment to {payee}" | Critical | Positive | `TransactionsApiTest.billPaymentIsRecorded` |
+| TC-API-TXN-03 | Searching by amount returns only transactions of that amount and account | Medium | Positive | `TransactionsApiTest.findByAmountReturnsOnlyThatAmount` |
+| TC-API-TXN-04 | A transaction read by id matches the one in the account history | Medium | Positive | `TransactionsApiTest.transactionByIdMatchesHistory` |
+| TC-API-TXN-05 | Searching by a date range around today finds today's transfer | Medium | Positive | `TransactionsApiTest.findByDateRangeIncludesTransfer` |
+
+## Integration · Transactions
+
+| ID | Test case | Priority | Type | Automated test |
+|---|---|---|---|---|
+| TC-INT-06 | The UI shows the same transactions (description and amount) as the API for an account | Critical | Integration | `TransactionsAcrossLayersTest.uiHistoryMatchesApi` |
