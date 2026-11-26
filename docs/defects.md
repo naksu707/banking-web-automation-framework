@@ -387,3 +387,77 @@ The page shows *"Bill Payment Complete"* for the right account, but the balance 
 
 - The customer and the payee see a payment as done while the money never left the account, so the books no longer balance.
 - Because it is intermittent, it is hard to detect without checking every confirmation against the back end, which is what this test does.
+
+---
+
+## BUG-012 · A loan down payment can overdraw the source account
+
+| Field | Value |
+|---|---|
+| **Status** | Open |
+| **Severity** | Critical: a loan is granted with a down payment the source account does not have |
+| **Priority** | High |
+| **Area** | Loans · REST API (`POST /services/bank/requestLoan`) |
+| **Environment** | https://parabank.parasoft.com/parabank/ · API · found 2026-11-26 |
+| **Automated test** | `LoanApiTest.downPaymentAboveSourceBalanceIsRejected` (tag `known-defect`) |
+| **Related test cases** | TC-API-LOAN-06 |
+| **Related defects** | [BUG-005](#bug-005--transfers-do-not-check-the-available-balance-and-leave-the-account-overdrawn), [BUG-009](#bug-009--bill-payments-do-not-check-the-available-balance-and-leave-the-account-overdrawn) (same missing balance check) |
+
+**Steps to reproduce**
+
+1. Register a new customer (first account: $515.50) and open a second account funded with $100 from the first one.
+2. Send `POST /services/bank/requestLoan?customerId={id}&amount=1000&downPayment=300&fromAccountId={second account}`.
+
+**Expected result**
+
+The loan is denied, or the request is rejected, because the source account only has $100 for a $300 down payment.
+
+**Actual result**
+
+The API answers `200 {"loanProviderName":"Wealth Securities Dynamic Loans (WSDL)","approved":true,"accountId":31104}`. A LOAN account is created and the second account goes from **100.00 to -200.00**.
+
+**Notes**
+
+- ParaBank only compares the down payment with the customer's total funds across all non-loan accounts ($515.50 here), not with the balance of the account the down payment comes from.
+
+**Impact**
+
+- The down payment is not really paid: it is taken from money the account does not have.
+- Combined with the missing balance checks in transfers and bill payments, any account can be pushed into an overdraft.
+
+---
+
+## BUG-013 · A loan with a negative down payment is approved and adds money to the source account
+
+| Field | Value |
+|---|---|
+| **Status** | Open |
+| **Severity** | Critical: a customer gets a loan and extra money in their account instead of paying a down payment |
+| **Priority** | Highest |
+| **Area** | Loans · REST API (`POST /services/bank/requestLoan`) |
+| **Environment** | https://parabank.parasoft.com/parabank/ · API · found 2026-11-26 |
+| **Automated test** | `LoanApiTest.negativeDownPaymentIsRejected` (tag `known-defect`) |
+| **Related test cases** | TC-API-LOAN-05 |
+| **Related defects** | [BUG-004](#bug-004--transfers-accept-a-negative-amount-which-moves-money-out-of-the-destination-account), [BUG-008](#bug-008--bill-payments-accept-a-negative-amount-which-adds-money-to-the-account) (same missing validation) |
+
+**Steps to reproduce**
+
+1. Log in and note the balance of account A (for example, 465.50).
+2. Send `POST /services/bank/requestLoan?customerId={id}&amount=500&downPayment=-200&fromAccountId={A}`.
+
+**Expected result**
+
+The request is rejected because the down payment is negative, no account is created and the balance stays the same.
+
+**Actual result**
+
+The API answers `200 {"loanProviderName":"Wealth Securities Dynamic Loans (WSDL)","approved":true,"accountId":34656}`. A LOAN account is created and account A goes **up** from 465.50 to 665.50.
+
+**Notes**
+
+- The down payment is taken with a withdrawal, and a withdrawal of a negative amount adds money.
+- The defect only shows when the loan itself is within the funds rule: a larger loan is denied for insufficient funds before the down payment matters.
+
+**Impact**
+
+- Customers receive cash on top of the loan instead of paying a down payment.

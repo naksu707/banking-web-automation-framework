@@ -113,3 +113,31 @@ Traceability between the test cases and their automated tests.
 | ID | Test case | Priority | Type | Automated test |
 |---|---|---|---|---|
 | TC-INT-04 | A bill paid in the UI takes exactly the amount out of the account in the back end | Critical | Integration, money integrity | `BillPayAcrossLayersTest.uiBillPaymentDebitsAccount` · ❌ fails intermittently: [BUG-011](defects.md#bug-011--a-confirmed-payment-or-transfer-sometimes-takes-no-money-out-of-the-source-account) |
+
+## Loans · UI
+
+ParaBank approves a loan when the down payment is not greater than the customer's available funds (balances of all non-loan accounts) and those funds cover a minimum share of the loan amount (an admin setting, 20% by default).
+
+| ID | Test case | Priority | Type | Automated test |
+|---|---|---|---|---|
+| TC-LOAN-01 | A loan within the customer's funds is approved and shows the new account number | Critical | Smoke, positive | `RequestLoanTest.loanWithinFundsIsApproved` |
+| TC-LOAN-02 | A loan more than 5 times the available funds is denied with "We cannot grant a loan in that amount with your available funds." | Critical | Negative, business rule | `RequestLoanTest.loanOutsideTheRulesIsDenied` (10000 / 50) |
+| TC-LOAN-03 | A down payment greater than the available funds is denied with "You do not have sufficient funds for the given down payment." | Critical | Negative, business rule | `RequestLoanTest.loanOutsideTheRulesIsDenied` (2000 / 1000) |
+| TC-LOAN-04 | Empty fields are rejected and no account is created | Medium | Negative | `RequestLoanTest.emptyFieldsAreRejected` |
+
+## Loans · API
+
+| ID | Test case | Priority | Type | Automated test |
+|---|---|---|---|---|
+| TC-API-LOAN-01 | An approved loan creates a LOAN account owned by the customer with the loan amount | Critical | Smoke, positive | `LoanApiTest.approvedLoanCreatesLoanAccount` |
+| TC-API-LOAN-02 | An approved loan takes exactly the down payment out of the source account | Critical | Positive, money integrity | `LoanApiTest.approvedLoanTakesDownPayment` |
+| TC-API-LOAN-03 | A loan more than 5 times the available funds is denied, no account is created and no money moves | Critical | Negative, business rule | `LoanApiTest.loanAboveFundsIsDenied` |
+| TC-API-LOAN-04 | A down payment greater than the available funds is denied, no account is created and no money moves | Critical | Negative, business rule | `LoanApiTest.downPaymentAboveFundsIsDenied` |
+| TC-API-LOAN-05 | A negative down payment is rejected and no money moves | Critical | Negative | `LoanApiTest.negativeDownPaymentIsRejected` · ❌ fails: [BUG-013](defects.md#bug-013--a-loan-with-a-negative-down-payment-is-approved-and-adds-money-to-the-source-account) |
+| TC-API-LOAN-06 | A down payment greater than the source account balance is rejected, even if the customer's total funds cover it | Critical | Negative, business rule | `LoanApiTest.downPaymentAboveSourceBalanceIsRejected` · ❌ fails: [BUG-012](defects.md#bug-012--a-loan-down-payment-can-overdraw-the-source-account) |
+
+## Integration · Loans
+
+| ID | Test case | Priority | Type | Automated test |
+|---|---|---|---|---|
+| TC-INT-05 | A loan approved in the UI exists in the back end as a LOAN account and the down payment was taken | Critical | Integration, money integrity | `LoanAcrossLayersTest.uiLoanMatchesBackEnd` |

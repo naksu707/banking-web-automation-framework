@@ -83,6 +83,16 @@ public class ParaBankApiClient {
                 .setData(GSON.toJson(body))));
     }
 
+    @Step("API: request a loan of {amount} with a down payment of {downPayment} from account {fromAccountId}")
+    public APIResponse requestLoan(long customerId, String amount, String downPayment, long fromAccountId) {
+        return attach("POST requestLoan", request.post(BASE + "requestLoan", RequestOptions.create()
+                .setQueryParam("customerId", String.valueOf(customerId))
+                .setQueryParam("amount", amount)
+                .setQueryParam("downPayment", downPayment)
+                .setQueryParam("fromAccountId", String.valueOf(fromAccountId))
+                .setHeader("Accept", "application/json")));
+    }
+
     /** Logs in and returns the customer, failing fast if the credentials are rejected. */
     public CustomerDto loginAndGetCustomer(String username, String password) {
         APIResponse response = login(username, password);
