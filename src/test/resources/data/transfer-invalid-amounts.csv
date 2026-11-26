@@ -1,0 +1,5 @@
+amount,reason
+# Amounts that Transfer Funds must reject without moving money (TransferFundsTest.invalidAmountIsRejected).
+# "" is an empty field.
+"",empty field
+abc,not a number

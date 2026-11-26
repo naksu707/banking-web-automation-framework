@@ -1,0 +1,5 @@
+amount,defect
+# Amounts that Bill Pay must reject but currently accepts: BUG-008 (negative) and BUG-010 (zero).
+# Used by BillPayTest.negativeOrZeroAmountIsRejected (tag known-defect).
+-20,BUG-008
+0,BUG-010

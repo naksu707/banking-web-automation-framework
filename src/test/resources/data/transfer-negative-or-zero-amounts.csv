@@ -1,0 +1,5 @@
+amount,defect
+# Amounts that Transfer Funds must reject but currently accepts: BUG-004 (negative) and BUG-006 (zero).
+# Used by TransferFundsTest.negativeOrZeroAmountIsRejected (tag known-defect).
+-50,BUG-004
+0,BUG-006

@@ -10,7 +10,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.CsvFileSource;
 import parabank.api.AccountDto;
 import parabank.api.CustomerDto;
 import parabank.api.ParaBankApiClient;
@@ -55,10 +55,10 @@ class TransferFundsTest extends BaseTest {
         assertThat(transfer.toAccountResult()).hasText(accounts.to());
     }
 
-    @ParameterizedTest(name = "Amount \"{0}\" is rejected and no money moves")
-    @ValueSource(strings = {"", "abc"})
+    @ParameterizedTest(name = "Amount \"{0}\" ({1}) is rejected and no money moves")
+    @CsvFileSource(resources = "/data/transfer-invalid-amounts.csv", numLinesToSkip = 1)
     @Severity(SeverityLevel.CRITICAL)
-    void invalidAmountIsRejected(String amount, APIRequestContext request) {
+    void invalidAmountIsRejected(String amount, String reason, APIRequestContext request) {
         assertTransferRejected(amount, request);
     }
 
@@ -68,10 +68,10 @@ class TransferFundsTest extends BaseTest {
      * Excluded from the default run; run it with: mvn test -Dgroups=known-defect -DexcludedGroups=
      */
     @ParameterizedTest(name = "BUG-004/006 · Amount \"{0}\" is rejected and no money moves")
-    @ValueSource(strings = {"-50", "0"})
+    @CsvFileSource(resources = "/data/transfer-negative-or-zero-amounts.csv", numLinesToSkip = 1)
     @Tag("known-defect")
     @Severity(SeverityLevel.CRITICAL)
-    void negativeOrZeroAmountIsRejected(String amount, APIRequestContext request) {
+    void negativeOrZeroAmountIsRejected(String amount, String defect, APIRequestContext request) {
         assertTransferRejected(amount, request);
     }
 

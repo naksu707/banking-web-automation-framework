@@ -10,7 +10,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.CsvFileSource;
 import parabank.api.CustomerDto;
 import parabank.api.ParaBankApiClient;
 import parabank.data.Customer;
@@ -55,9 +55,7 @@ class RequestLoanTest extends BaseTest {
     }
 
     @ParameterizedTest(name = "Loan {0} with down payment {1} is denied: \"{2}\"")
-    @CsvSource(delimiter = '|', value = {
-            "10000 | 50   | We cannot grant a loan in that amount with your available funds.",
-            "2000  | 1000 | You do not have sufficient funds for the given down payment."})
+    @CsvFileSource(resources = "/data/loan-denials.csv", numLinesToSkip = 1, delimiter = '|')
     @Severity(SeverityLevel.CRITICAL)
     void loanOutsideTheRulesIsDenied(String amount, String downPayment, String message, APIRequestContext request) {
         int accountsBefore = accountCount(request);

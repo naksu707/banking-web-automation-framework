@@ -22,8 +22,15 @@ concurrency:
 
 jobs:
   test:
+    name: Tests (${{ matrix.browser }})
     runs-on: ubuntu-latest
     timeout-minutes: 30
+
+    # The same suite runs once per browser engine; a failure in one browser does not stop the others
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
 
     # CI runs against its own ParaBank (official Docker image) instead of the shared public demo,
     # which rate-limits automated traffic (Cloudflare HTTP 429) and changes state between runs.
@@ -47,9 +54,9 @@ jobs:
           java-version: "17"
           cache: maven
 
-      - name: Install Playwright browser
+      - name: Install ${{ matrix.browser }}
         # Playwright is a test-scoped dependency, so exec:java needs the test classpath
-        run: mvn -B -q test-compile exec:java -e -Dexec.classpathScope=test -Dexec.mainClass=com.microsoft.playwright.CLI -Dexec.args="install --with-deps chromium"
+        run: mvn -B -q test-compile exec:java -e -Dexec.classpathScope=test -Dexec.mainClass=com.microsoft.playwright.CLI -Dexec.args="install --with-deps ${{ matrix.browser }}"
 
       - name: Wait for ParaBank to start
         run: |
@@ -65,9 +72,9 @@ jobs:
 
       - name: Run tests
         env:
-          # Chromium was installed in the previous step; skip Playwright's automatic download of every browser
+          # The browser was installed in a previous step; skip Playwright's automatic download of every browser
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
-        run: mvn -B test -Dheadless=true -Dgroups="${{ github.event.inputs.groups }}"
+        run: mvn -B test -Dheadless=true -Dbrowser=${{ matrix.browser }} -Dgroups="${{ github.event.inputs.groups }}"
 
       - name: Generate Allure report
         if: always()
@@ -77,7 +84,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v5
         with:
-          name: allure-report
+          name: allure-report-${{ matrix.browser }}
           path: target/site/allure-maven-plugin
           retention-days: 14
 
@@ -85,6 +92,6 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v5
         with:
-          name: playwright-traces
+          name: playwright-traces-${{ matrix.browser }}
           path: target/playwright
           retention-days: 14

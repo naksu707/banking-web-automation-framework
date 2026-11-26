@@ -1,0 +1,5 @@
+amount|downPayment|message
+# Loan requests that ParaBank must deny for a new customer ($515.50 of available funds),
+# with the message the page shows (RequestLoanTest.loanOutsideTheRulesIsDenied).
+10000|50|We cannot grant a loan in that amount with your available funds.
+2000|1000|You do not have sufficient funds for the given down payment.

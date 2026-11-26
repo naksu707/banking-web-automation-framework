@@ -11,7 +11,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.CsvFileSource;
 import parabank.api.CustomerDto;
 import parabank.api.ParaBankApiClient;
 import parabank.api.TransactionDto;
@@ -95,10 +95,7 @@ class FindTransactionsTest extends BaseTest {
     }
 
     @ParameterizedTest(name = "Search by {0} with \"{1}\" shows \"{3}\"")
-    @CsvSource(delimiter = '|', value = {
-            "id     | abc        | transactionIdError   | Invalid transaction ID",
-            "amount | abc        | amountError          | Invalid amount",
-            "date   | 2026/11/26 | transactionDateError | Invalid date format"})
+    @CsvFileSource(resources = "/data/transaction-search-validation.csv", numLinesToSkip = 1, delimiter = '|')
     @Severity(SeverityLevel.NORMAL)
     void invalidSearchShowsMessage(String search, String value, String messageId, String message) {
         FindTransactionsPage find = loginAndGoToFindTransactions(customer);

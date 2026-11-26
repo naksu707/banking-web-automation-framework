@@ -12,7 +12,7 @@
 </div>
 
 > [!NOTE]
-> **Status: in progress 🚧** · Phase 1 (framework core and authentication) is complete. Phase 2 (core banking workflows) covers opening accounts, transfers, bill payment and loan requests; transaction history is in progress.
+> **Status: complete ✅** · Phase 1 (framework core and authentication), Phase 2 (core banking workflows: accounts, transfers, bill payment, loans and transaction history) and Phase 3 (data-driven tests, cross-browser CI, test strategy and plan) are done.
 
 ---
 
@@ -43,7 +43,7 @@ A test automation framework for **[ParaBank](https://parabank.parasoft.com/parab
 | Loan requests (approval, denial rules, invalid down payments, UI vs. API) | ✅ | ✅ | Done |
 | Transaction history (search by amount, id and dates, validation, other customers' data, UI vs. API) | ✅ | ✅ | Done |
 
-Detailed test cases and their traceability: **[docs/test-cases.md](docs/test-cases.md)**.
+📄 **Documentation:** [Test strategy](docs/test-strategy.md) · [Test plan](docs/test-plan.md) · [Test cases and traceability](docs/test-cases.md) · [Defect reports](docs/defects.md)
 
 ### 🐞 Defects found
 
@@ -81,11 +81,11 @@ Tests that expose an open defect are tagged `known-defect` and skipped by defaul
 |---|---|
 | Language | Java 17 |
 | UI and API automation | Playwright for Java (`Page`, `Locator`, `APIRequestContext`) |
-| Test runner | JUnit 5 (tags, parameterized tests) |
+| Test runner | JUnit 5 (tags, parameterized and data-driven tests from CSV files) |
 | Build | Maven |
 | Reporting | Allure (steps, screenshots, API responses) and Playwright traces |
 | Logging | Log4j2 (console and `target/logs/tests.log`) |
-| CI/CD | GitHub Actions |
+| CI/CD | GitHub Actions (Chromium, Firefox and WebKit matrix) |
 
 ---
 
@@ -111,7 +111,8 @@ src/test
 │   └── utils/          BaseTest, BaseApiTest, Config, CustomOptions, FileManager, Logs, PageProvider
 └── resources/
     ├── config.properties
-    └── log4j2.xml
+    ├── log4j2.xml
+    └── data/           CSV test data: invalid credentials, invalid amounts, loan denials, search validation
 ```
 
 **How a test runs:** `@UsePlaywright(CustomOptions.class)` gives every test a fresh, isolated browser context and page (or API context), so cookies and sessions never leak between tests. `PageProvider` shares the page with the listeners, and `EvidenceExtension` captures a screenshot when a test fails.
@@ -172,7 +173,23 @@ Each test shows its steps and API calls attach their JSON responses. When a UI t
 
 ## ⚙️ CI/CD
 
-GitHub Actions runs the suite on every push and pull request to `main`, and can be started manually choosing which tags to run. The Allure report and the traces of failed tests are uploaded as artifacts.
+GitHub Actions runs the suite on every push and pull request to `main`, and can be started manually choosing which tags to run.
+
+- **Cross-browser matrix:** the suite runs in three parallel jobs, one per engine: **Chromium, Firefox and WebKit**. A failure in one browser does not cancel the others.
+- **Own ParaBank:** each job starts its own `parasoft/parabank` Docker container, so runs are isolated and predictable.
+- **Artifacts:** an Allure report per browser (`allure-report-<browser>`) and the Playwright traces of failed tests.
+
+### 📊 Data-driven tests
+
+Input values and expected messages for validation tests live in CSV files under `src/test/resources/data`, read with JUnit's `@CsvFileSource`. To add a case, add a row; no Java changes are needed.
+
+| File | Used by |
+|---|---|
+| `invalid-credentials.csv` | `LoginTest` (wrong credentials) |
+| `transfer-invalid-amounts.csv`, `transfer-negative-or-zero-amounts.csv` | `TransferFundsTest` |
+| `bill-pay-invalid-amounts.csv`, `bill-pay-negative-or-zero-amounts.csv` | `BillPayTest` |
+| `loan-denials.csv` | `RequestLoanTest` |
+| `transaction-search-validation.csv` | `FindTransactionsTest` |
 
 ---
 
@@ -187,9 +204,9 @@ GitHub Actions runs the suite on every push and pull request to `main`, and can 
 - [x] Bill payment (UI, API and UI vs. API)
 - [x] Loan requests (UI, API and UI vs. API)
 - [x] Transaction history
-- [ ] Data-driven tests from external files
-- [ ] Cross-browser matrix in CI
-- [ ] Test strategy and test plan documents
+- [x] Data-driven tests from external files (CSV)
+- [x] Cross-browser matrix in CI (Chromium, Firefox, WebKit)
+- [x] [Test strategy](docs/test-strategy.md) and [test plan](docs/test-plan.md) documents
 
 ---
 

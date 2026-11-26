@@ -1,0 +1,5 @@
+amount,message
+# Amounts that Bill Pay must reject, with the id suffix of the validation message the page shows
+# (BillPayTest.invalidAmountIsRejected). "" is an empty field.
+"",amount-empty
+abc,amount-invalid

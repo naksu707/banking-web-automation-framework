@@ -16,11 +16,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.CsvFileSource;
 
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 
@@ -61,12 +59,6 @@ class LoginTest extends BaseTest {
         assertThat(overview.welcomeMessage()).containsText(customer.fullName());
     }
 
-    static Stream<Arguments> invalidCredentials() {
-        return Stream.of(
-                Arguments.of("wrong password", "REGISTERED", "WrongPass123"),
-                Arguments.of("unknown username", "unknown_user_x9z", "AnyPass123"));
-    }
-
     /** Security requirement: empty credentials must never open the account area. */
     @Test
     @Tag("smoke")
@@ -86,7 +78,7 @@ class LoginTest extends BaseTest {
      * Excluded from the default run; run it with: mvn test -Dgroups=known-defect -DexcludedGroups=
      */
     @ParameterizedTest(name = "BUG-003 · {0}")
-    @MethodSource("invalidCredentials")
+    @CsvFileSource(resources = "/data/invalid-credentials.csv", numLinesToSkip = 1)
     @Tag("known-defect")
     @Story("Invalid login")
     @Severity(SeverityLevel.BLOCKER)
@@ -125,7 +117,7 @@ class LoginTest extends BaseTest {
      * Excluded from the default run; run it with: mvn test -Dgroups=known-defect -DexcludedGroups=
      */
     @ParameterizedTest(name = "{0}")
-    @MethodSource("invalidCredentials")
+    @CsvFileSource(resources = "/data/invalid-credentials.csv", numLinesToSkip = 1)
     @Tag("known-defect")
     @Story("Invalid login")
     @Severity(SeverityLevel.NORMAL)

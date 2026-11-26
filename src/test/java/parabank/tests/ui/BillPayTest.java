@@ -10,8 +10,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.CsvFileSource;
 import parabank.api.CustomerDto;
 import parabank.api.ParaBankApiClient;
 import parabank.data.Customer;
@@ -82,7 +81,7 @@ class BillPayTest extends BaseTest {
     }
 
     @ParameterizedTest(name = "Amount \"{0}\" shows \"{1}\" and no money leaves the account")
-    @CsvSource({"'', amount-empty", "abc, amount-invalid"})
+    @CsvFileSource(resources = "/data/bill-pay-invalid-amounts.csv", numLinesToSkip = 1)
     @Severity(SeverityLevel.CRITICAL)
     void invalidAmountIsRejected(String amount, String message, APIRequestContext request) {
         Payee payee = TestDataFactory.newPayee();
@@ -95,10 +94,10 @@ class BillPayTest extends BaseTest {
      * Excluded from the default run; run it with: mvn test -Dgroups=known-defect -DexcludedGroups=
      */
     @ParameterizedTest(name = "BUG-008/010 · Amount \"{0}\" is rejected and no money leaves the account")
-    @ValueSource(strings = {"-20", "0"})
+    @CsvFileSource(resources = "/data/bill-pay-negative-or-zero-amounts.csv", numLinesToSkip = 1)
     @Tag("known-defect")
     @Severity(SeverityLevel.CRITICAL)
-    void negativeOrZeroAmountIsRejected(String amount, APIRequestContext request) {
+    void negativeOrZeroAmountIsRejected(String amount, String defect, APIRequestContext request) {
         Payee payee = TestDataFactory.newPayee();
         assertPaymentRejected(request, payee, payee.accountNumber(), amount, null);
     }

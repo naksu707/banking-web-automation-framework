@@ -1,0 +1,6 @@
+search|value|messageId|message
+# Invalid searches in Find Transactions and the message shown next to the field
+# (FindTransactionsTest.invalidSearchShowsMessage). search is id, amount or date.
+id|abc|transactionIdError|Invalid transaction ID
+amount|abc|amountError|Invalid amount
+date|2026/11/26|transactionDateError|Invalid date format
