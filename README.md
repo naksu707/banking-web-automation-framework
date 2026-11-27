@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🏦 Banking Web Automation Framework
+# Banking Web Automation Framework
 ### UI and REST API test automation for a banking application, with Playwright for Java
 
 <p>
